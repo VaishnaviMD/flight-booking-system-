@@ -1,0 +1,69 @@
+<!-- Loading State -->
+<div *ngIf="loading" style="text-align: center; padding: 40px 0; color: var(--text-muted, #64748b);">
+  <span class="material-icons" style="font-size: 36px; animation: spin 1s linear infinite;">sync</span>
+  <p>Finding available flights...</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && flights.length === 0" style="text-align: center; padding: 40px 20px; background: var(--card-bg, #fff); border-radius: 16px; border: 1px dashed var(--border-color, #cbd5e1);">
+  <span class="material-icons" style="font-size: 48px; color: var(--text-muted, #94a3b8);">flight_land</span>
+  <h4 style="margin: 8px 0 0; color: var(--text-main, #1e293b);">No flights match your criteria</h4>
+  <p style="margin: 4px 0 0; color: var(--text-muted, #64748b); font-size: 0.9rem;">Try adjusting your filters or date range.</p>
+</div>
+
+<!-- Flight Cards List -->
+<div *ngIf="!loading && flights.length > 0" style="display: flex; flex-direction: column; gap: 16px;">
+  <div *ngFor="let f of flights" style="background: var(--card-bg, #ffffff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0); padding: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 16px; align-items: center;">
+    
+    <!-- Airline & Flight Info -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(37,99,235,0.1); color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+        {{ f.airline?.code || 'FL' }}
+      </div>
+      <div>
+        <div style="font-weight: 700; color: var(--text-main, #0f172a); font-size: 1rem;">{{ f.airline?.name }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted, #64748b);">{{ f.flightNumber }} • {{ f.cabinClass }}</div>
+      </div>
+    </div>
+
+    <!-- Departure -->
+    <div>
+      <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main, #0f172a);">
+        {{ f.departureTime | date:'shortTime' }}
+      </div>
+      <div style="font-weight: 700; color: var(--text-muted, #475569); font-size: 0.9rem;">
+        {{ f.originAirport?.city || f.originAirport?.code }} ({{ f.originAirport?.code }})
+      </div>
+    </div>
+
+    <!-- Flight Duration Line -->
+    <div style="text-align: center;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #2563eb;">2h 10m • Non-stop</div>
+      <div style="height: 2px; background: #cbd5e1; margin: 6px 0; position: relative;">
+        <span class="material-icons" style="position: absolute; top: -9px; left: 45%; font-size: 18px; color: #2563eb;">flight</span>
+      </div>
+      <div style="font-size: 0.75rem; color: #16a34a; font-weight: 600;">{{ f.availableSeats }} seats left</div>
+    </div>
+
+    <!-- Arrival -->
+    <div>
+      <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-main, #0f172a);">
+        {{ f.arrivalTime | date:'shortTime' }}
+      </div>
+      <div style="font-weight: 700; color: var(--text-muted, #475569); font-size: 0.9rem;">
+        {{ f.destinationAirport?.city || f.destinationAirport?.code }} ({{ f.destinationAirport?.code }})
+      </div>
+    </div>
+
+    <!-- Price and Action -->
+    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+      <div style="font-size: 1.4rem; font-weight: 900; color: var(--text-main, #0f172a);">
+        ₹{{ f.basePrice | number }}
+      </div>
+      <button (click)="onSelect(f)" style="background: #2563eb; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+        Select Flight
+      </button>
+    </div>
+
+  </div>
+</div>

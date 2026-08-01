@@ -1,0 +1,20 @@
+<div class="container" style="max-width: 1200px; margin: 32px auto; padding: 0 16px;">
+  
+  <!-- Header search bar form -->
+  <app-search-with-filters-form (search)="executeSearch($event)"></app-search-with-filters-form>
+
+  <!-- Split View Grid: Left Sidebar (Filter Panel) & Right Column (Flight List) -->
+  <div style="display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start;">
+    
+    <!-- Filter Panel Sidebar -->
+    <app-flight-filter-panel (filterChange)="onFilterChange($event)"></app-flight-filter-panel>
+
+    <!-- Filtered Flight List -->
+    <app-filtered-flight-list 
+      [flights]="displayedFlights" 
+      [loading]="loading" 
+      (selectFlight)="onFlightSelect($event)">
+    </app-filtered-flight-list>
+
+  </div>
+</div>

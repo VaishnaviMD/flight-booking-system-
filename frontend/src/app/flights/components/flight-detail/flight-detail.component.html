@@ -1,0 +1,82 @@
+<div class="container" style="max-width: 900px; margin: 32px auto; padding: 0 16px;">
+  
+  <div *ngIf="loading" style="text-align: center; padding: 60px 0; color: var(--text-muted, #64748b);">
+    <span class="material-icons" style="font-size: 40px; animation: spin 1s linear infinite;">sync</span>
+    <p>Loading flight overview...</p>
+  </div>
+
+  <div *ngIf="!loading && !flight" style="text-align: center; padding: 60px 20px; background: var(--card-bg, #fff); border-radius: 16px; border: 1px dashed var(--border-color, #e2e8f0);">
+    <h3 style="margin: 0; color: var(--text-main, #1e293b);">Flight detail not found</h3>
+    <p style="color: var(--text-muted, #64748b);">The requested flight may have expired or is unavailable.</p>
+    <a routerLink="/search" style="display: inline-block; background: #2563eb; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-top: 12px;">Back to Search</a>
+  </div>
+
+  <div *ngIf="!loading && flight" style="background: var(--card-bg, #ffffff); border-radius: 20px; border: 1px solid var(--border-color, #e2e8f0); padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+    
+    <!-- Top Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 20px; margin-bottom: 24px;">
+      <div>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #2563eb; text-transform: uppercase;">FLIGHT DETAILS</span>
+        <h1 style="margin: 4px 0 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main, #0f172a);">
+          {{ flight.airline?.name }} ({{ flight.flightNumber }})
+        </h1>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 1.8rem; font-weight: 900; color: #16a34a;">₹{{ flight.basePrice | number }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted, #64748b);">per passenger</div>
+      </div>
+    </div>
+
+    <!-- Flight Route Section -->
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; background: rgba(37,99,235,0.04); padding: 24px; border-radius: 16px; margin-bottom: 28px;">
+      <div>
+        <div style="font-size: 2rem; font-weight: 900; color: var(--text-main, #0f172a);">{{ flight.originAirport?.code }}</div>
+        <div style="font-weight: 700; color: var(--text-muted, #475569);">{{ flight.originAirport?.city }}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted, #64748b);">{{ flight.departureTime | date:'medium' }}</div>
+      </div>
+
+      <div style="text-align: center; min-width: 140px;">
+        <div style="font-weight: 700; font-size: 0.85rem; color: #2563eb;">2 Hours 10 Minutes</div>
+        <div style="height: 2px; background: #2563eb; margin: 8px 0; position: relative;">
+          <span class="material-icons" style="position: absolute; top: -10px; left: 42%; font-size: 20px; color: #2563eb;">flight</span>
+        </div>
+        <div style="font-size: 0.8rem; color: #16a34a; font-weight: 600;">Non-stop</div>
+      </div>
+
+      <div style="text-align: right;">
+        <div style="font-size: 2rem; font-weight: 900; color: var(--text-main, #0f172a);">{{ flight.destinationAirport?.code }}</div>
+        <div style="font-weight: 700; color: var(--text-muted, #475569);">{{ flight.destinationAirport?.city }}</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted, #64748b);">{{ flight.arrivalTime | date:'medium' }}</div>
+      </div>
+    </div>
+
+    <!-- Details Specs Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+      <div style="border: 1px solid var(--border-color, #e2e8f0); padding: 16px; border-radius: 12px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b);">CABIN CLASS</div>
+        <div style="font-weight: 800; color: var(--text-main, #0f172a); font-size: 1.1rem; margin-top: 4px;">{{ flight.cabinClass }}</div>
+      </div>
+
+      <div style="border: 1px solid var(--border-color, #e2e8f0); padding: 16px; border-radius: 12px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b);">BAGGAGE ALLOWANCE</div>
+        <div style="font-weight: 800; color: var(--text-main, #0f172a); font-size: 1.1rem; margin-top: 4px;">15 kg Check-in, 7 kg Cabin</div>
+      </div>
+
+      <div style="border: 1px solid var(--border-color, #e2e8f0); padding: 16px; border-radius: 12px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b);">SEATS AVAILABLE</div>
+        <div style="font-weight: 800; color: #16a34a; font-size: 1.1rem; margin-top: 4px;">{{ flight.availableSeats }} Seats</div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 20px;">
+      <a routerLink="/search" style="color: var(--text-muted, #64748b); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+        <span class="material-icons">arrow_back</span> Back to search
+      </a>
+      <button (click)="proceedToBooking()" style="background: #2563eb; color: #fff; border: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        Proceed to Book <span class="material-icons">arrow_forward</span>
+      </button>
+    </div>
+
+  </div>
+</div>

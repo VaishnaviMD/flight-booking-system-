@@ -1,0 +1,30 @@
+<div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 16px 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.03); margin-bottom: 24px;">
+  <form (ngSubmit)="onSubmit()" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto; gap: 12px; align-items: center;">
+    <div>
+      <label style="display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 4px;">FROM</label>
+      <select [(ngModel)]="originCode" name="originCode" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600; font-size: 0.9rem;">
+        <option value="">All Origins</option>
+        <option *ngFor="let a of airports" [value]="a.code">{{ a.city }} ({{ a.code }})</option>
+      </select>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 4px;">TO</label>
+      <select [(ngModel)]="destinationCode" name="destinationCode" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600; font-size: 0.9rem;">
+        <option value="">All Destinations</option>
+        <option *ngFor="let a of airports" [value]="a.code">{{ a.city }} ({{ a.code }})</option>
+      </select>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 4px;">DATE</label>
+      <input type="date" [(ngModel)]="departureDate" name="departureDate" style="width: 100%; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600; font-size: 0.9rem;" />
+    </div>
+
+    <div style="padding-top: 18px;">
+      <button type="submit" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+        <span class="material-icons" style="font-size: 18px;">search</span> Update Search
+      </button>
+    </div>
+  </form>
+</div>

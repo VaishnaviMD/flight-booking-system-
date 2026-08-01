@@ -1,0 +1,83 @@
+<div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+  
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 12px; margin-bottom: 16px;">
+    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-main, #0f172a); display: flex; align-items: center; gap: 6px;">
+      <span class="material-icons" style="font-size: 20px; color: #2563eb;">tune</span> Filter Results
+    </h3>
+    <button (click)="resetFilters()" style="background: transparent; border: none; color: #2563eb; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+      Reset All
+    </button>
+  </div>
+
+  <!-- Sort By -->
+  <div style="margin-bottom: 20px;">
+    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 8px;">SORT BY</label>
+    <select [(ngModel)]="state.sortBy" (change)="emitChange()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600; font-size: 0.9rem;">
+      <option value="PRICE_LOW">Lowest Price</option>
+      <option value="PRICE_HIGH">Highest Price</option>
+      <option value="DEPARTURE_TIME">Departure Time</option>
+      <option value="DURATION">Duration</option>
+    </select>
+  </div>
+
+  <!-- Max Price Range -->
+  <div style="margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: var(--text-main, #1e293b);">
+      <span>Max Price</span>
+      <span style="color: #2563eb;">₹{{ state.maxPrice | number }}</span>
+    </div>
+    <input 
+      type="range" 
+      min="2000" 
+      [max]="maxPriceLimit" 
+      step="250" 
+      [(ngModel)]="state.maxPrice" 
+      (input)="emitChange()"
+      style="width: 100%; accent-color: #2563eb;" />
+  </div>
+
+  <!-- Stops Filter Buttons -->
+  <div style="margin-bottom: 20px;">
+    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 8px;">STOPS</label>
+    <div style="display: flex; gap: 6px;">
+      <button 
+        (click)="setStops('ALL')"
+        [style.background]="state.stops === 'ALL' ? '#2563eb' : 'rgba(0,0,0,0.04)'"
+        [style.color]="state.stops === 'ALL' ? '#fff' : 'var(--text-main, #334155)'"
+        style="flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+        Any
+      </button>
+      <button 
+        (click)="setStops('NONSTOP')"
+        [style.background]="state.stops === 'NONSTOP' ? '#2563eb' : 'rgba(0,0,0,0.04)'"
+        [style.color]="state.stops === 'NONSTOP' ? '#fff' : 'var(--text-main, #334155)'"
+        style="flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+        Direct
+      </button>
+      <button 
+        (click)="setStops('ONE_STOP')"
+        [style.background]="state.stops === 'ONE_STOP' ? '#2563eb' : 'rgba(0,0,0,0.04)'"
+        [style.color]="state.stops === 'ONE_STOP' ? '#fff' : 'var(--text-main, #334155)'"
+        style="flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+        1 Stop
+      </button>
+    </div>
+  </div>
+
+  <!-- Airlines Filter -->
+  <div>
+    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 8px;">AIRLINES</label>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <label *ngFor="let a of airlines" style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-main, #334155); cursor: pointer;">
+        <input 
+          type="checkbox" 
+          [checked]="state.selectedAirlines.includes(a.code)" 
+          (change)="onAirlineToggle(a.code, $event)"
+          style="accent-color: #2563eb; width: 16px; height: 16px;" />
+        <span>{{ a.name }} ({{ a.code }})</span>
+      </label>
+    </div>
+  </div>
+
+</div>
