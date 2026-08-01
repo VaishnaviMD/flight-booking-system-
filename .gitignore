@@ -1,0 +1,37 @@
+# ── Java / Maven ──────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+.maven-validation-home/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ── IDE ───────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── Node / Angular ────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+*.js.map
+
+# ── Environment / Secrets ─────────────────────────────────
+.env
+*.env
+application-local.properties
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
