@@ -1,0 +1,13 @@
+<div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main, #0f172a);">
+      {{ flights.length }} FLIGHT(S) FOUND
+    </h3>
+  </div>
+
+  <app-flight-list 
+    [flights]="flights" 
+    [loading]="loading" 
+    (selectFlight)="onFlightSelect($event)">
+  </app-flight-list>
+</div>

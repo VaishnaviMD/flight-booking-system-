@@ -1,0 +1,31 @@
+<h2 mat-dialog-title style="margin: 0; font-weight: 700; color: var(--text-main, #1e293b); display: flex; align-items: center; gap: 8px;">
+  <span class="material-icons" style="color: #ef4444;">warning</span>
+  Confirm Cancellation
+</h2>
+
+<mat-dialog-content style="padding-top: 16px; font-size: 0.95rem; color: var(--text-muted, #64748b);">
+  <p style="margin-bottom: 16px;">Are you sure you want to cancel this flight booking? This action cannot be undone.</p>
+  
+  <div style="background: rgba(239, 68, 68, 0.08); border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+    <div style="font-weight: 600; color: #dc2626; margin-bottom: 4px;">Refund Breakdown</div>
+    <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">
+      Estimated Refund: <span style="color: #16a34a;">{{ data?.refundAmount || '₹0' }}</span>
+    </div>
+  </div>
+
+  <mat-form-field appearance="outline" style="width: 100%;">
+    <mat-label>Reason for Cancellation</mat-label>
+    <mat-select [(ngModel)]="selectedReason">
+      <mat-option *ngFor="let r of data?.reasons" [value]="r">
+        {{ r }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" style="gap: 12px; padding: 16px 24px;">
+  <button mat-button (click)="close()" style="border-radius: 8px; border: 1px solid #cbd5e1;">Keep Booking</button>
+  <button mat-raised-button color="warn" (click)="confirm()" style="border-radius: 8px; background: #ef4444; color: white;">
+    Cancel Booking
+  </button>
+</mat-dialog-actions>

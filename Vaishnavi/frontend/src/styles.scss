@@ -1,0 +1,223 @@
+/* Dark & Light Theme Design System — SkyFlow Operations */
+:root {
+  --primary-bg: #0b1329;
+  --surface-bg: #151e36;
+  --surface-card: #1c2744;
+  --border-color: #2a3759;
+  --border-highlight: #37476e;
+  --input-bg: #0f172a;
+  --sidebar-bg: #0d162e;
+  --header-bg: #0d162e;
+  
+  --accent-color: #00dc82;
+  --accent-hover: #05b86f;
+  --accent-glow: rgba(0, 220, 130, 0.2);
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --font-family: 'Plus Jakarta Sans', sans-serif;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Light Theme Overrides */
+body.light-theme {
+  --primary-bg: #f4f6f9;
+  --surface-bg: #ffffff;
+  --surface-card: #ffffff;
+  --border-color: #e2e8f0;
+  --border-highlight: #cbd5e1;
+  --input-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --header-bg: #ffffff;
+
+  --accent-color: #0284c7;
+  --accent-hover: #0369a1;
+  --accent-glow: rgba(2, 132, 199, 0.2);
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--primary-bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Card Styling & Dropdown Popup Visibility */
+.card {
+  background: var(--surface-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  overflow: visible !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+
+  &:hover {
+    border-color: var(--border-highlight);
+  }
+}
+
+/* Form Controls & Dropdown Menu Popups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: visible !important;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: var(--input-bg);
+    color: var(--text-main);
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+  }
+
+  select {
+    cursor: pointer;
+    appearance: auto;
+  }
+
+  select option {
+    background-color: var(--surface-bg) !important;
+    color: var(--text-main) !important;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+
+  &-primary {
+    background: var(--accent-color);
+    color: #ffffff;
+
+    &:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+  }
+
+  &-secondary {
+    background: var(--border-color);
+    color: var(--text-main);
+
+    &:hover {
+      background: var(--border-highlight);
+    }
+  }
+
+  &-danger {
+    background: #ef4444;
+    color: white;
+
+    &:hover {
+      background: #dc2626;
+    }
+  }
+
+  &-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+      border-color: var(--border-highlight);
+    }
+  }
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+
+  &-operational, &-success, &-on-time {
+    background: rgba(0, 220, 130, 0.15);
+    color: #00b86b;
+    border: 1px solid rgba(0, 220, 130, 0.3);
+  }
+
+  &-maintenance, &-warning, &-delayed {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  &-danger, &-cancelled {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+}

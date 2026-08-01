@@ -1,0 +1,63 @@
+<div style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+  <div style="margin-bottom: 20px;">
+    <h2 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--text-main, #0f172a); display: flex; align-items: center; gap: 8px;">
+      <span class="material-icons" style="color: #2563eb;">flight_takeoff</span> Search Flights
+    </h2>
+    <p style="margin: 4px 0 0; color: var(--text-muted, #64748b); font-size: 0.9rem;">Find available flights for your route and preferred dates.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end;">
+    
+    <!-- Origin Select -->
+    <div>
+      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 6px;">FROM</label>
+      <select [(ngModel)]="originCode" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600;">
+        <option value="">All Origins</option>
+        <option *ngFor="let a of airports" [value]="a.code">{{ a.city }} ({{ a.code }})</option>
+      </select>
+    </div>
+
+    <!-- Swap Button -->
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <button (click)="swapAirports()" type="button" style="background: rgba(37,99,235,0.08); border: none; width: 44px; height: 44px; border-radius: 50%; color: #2563eb; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Swap Origin & Destination">
+        <span class="material-icons">swap_horiz</span>
+      </button>
+    </div>
+
+    <!-- Destination Select -->
+    <div>
+      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 6px;">TO</label>
+      <select [(ngModel)]="destinationCode" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600;">
+        <option value="">All Destinations</option>
+        <option *ngFor="let a of airports" [value]="a.code">{{ a.city }} ({{ a.code }})</option>
+      </select>
+    </div>
+
+    <!-- Date Picker -->
+    <div>
+      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 6px;">DEPARTURE</label>
+      <input type="date" [(ngModel)]="departureDate" style="width: 100%; padding: 11px; border-radius: 10px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600;" />
+    </div>
+
+    <!-- Cabin & Passengers -->
+    <div>
+      <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; margin-bottom: 6px;">CABIN CLASS</label>
+      <select [(ngModel)]="cabinClass" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color, #cbd5e1); background: var(--surface-bg, #fff); color: var(--text-main, #0f172a); font-weight: 600;">
+        <option value="ECONOMY">Economy</option>
+        <option value="PREMIUM_ECONOMY">Premium Economy</option>
+        <option value="BUSINESS">Business</option>
+        <option value="FIRST">First Class</option>
+      </select>
+    </div>
+
+  </div>
+
+  <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+    <button (click)="reset()" style="background: transparent; border: 1px solid #cbd5e1; color: var(--text-main, #475569); padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+      Reset
+    </button>
+    <button (click)="onSearch()" style="background: #2563eb; border: none; color: #ffffff; padding: 10px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+      <span class="material-icons">search</span> Search Flights
+    </button>
+  </div>
+</div>
