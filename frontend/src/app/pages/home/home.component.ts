@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FlightService } from '../../services/flight.service';
+import { ToastService } from '../../services/toast.service';
 import { Airport } from '../../models/flight.model';
 
 @Component({
@@ -39,7 +40,7 @@ import { Airport } from '../../models/flight.model';
 
             <div class="form-group">
               <label>Departure Date</label>
-              <input type="date" [(ngModel)]="departureDate" name="departureDate">
+              <input type="date" [(ngModel)]="departureDate" name="departureDate" [min]="today">
             </div>
 
             <div class="form-group">
@@ -141,12 +142,14 @@ import { Airport } from '../../models/flight.model';
 export class HomeComponent implements OnInit {
   private flightService = inject(FlightService);
   private router = inject(Router);
+  private toast = inject(ToastService);
 
   airports: Airport[] = [];
   originCode: string = '';
   destinationCode: string = '';
   departureDate: string = '';
   cabinClass: string = 'ECONOMY';
+  today: string = new Date().toISOString().split('T')[0];
 
   ngOnInit() {
     this.flightService.getAirports().subscribe({
@@ -156,6 +159,14 @@ export class HomeComponent implements OnInit {
   }
 
   onSearch() {
+    if (!this.originCode || !this.destinationCode || !this.departureDate) {
+      this.toast.warning('Please select origin, destination and departure date.');
+      return;
+    }
+    if (this.originCode === this.destinationCode) {
+      this.toast.warning('Origin and destination cannot be the same.');
+      return;
+    }
     this.router.navigate(['/search'], {
       queryParams: {
         originCode: this.originCode,

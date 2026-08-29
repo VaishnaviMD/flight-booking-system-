@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FlightService } from '../../services/flight.service';
+import { ErrorDialogService } from '../../services/error-dialog.service';
 import { Flight } from '../../models/flight.model';
 
 @Component({
@@ -20,7 +21,7 @@ import { Flight } from '../../models/flight.model';
           <div>
             <span class="tag">FLIGHT DETAIL</span>
             <h2>{{ flight.airline.name }} {{ flight.flightNumber }}</h2>
-            <p class="sub-route">{{ flight.originAirport.city }} to {{ flight.destinationAirport.city }} · Direct Flight</p>
+            <p class="sub-route">{{ flight.originAirport.city }} to {{ flight.destinationAirport.city }} · {{ flight.stops === 0 ? 'Direct Flight' : flight.stops + ' Stop(s)' }}</p>
           </div>
           <div class="price-hero">
             <span class="from-lbl">FROM</span>
@@ -32,19 +33,19 @@ import { Flight } from '../../models/flight.model';
           <div class="time-box">
             <span class="time-large">{{ flight.departureTime | date:'HH:mm' }}</span>
             <span class="city-name">{{ flight.originAirport.code }}</span>
-            <span class="gate-info">Jul 14, 2026 · T7 · Gate C18</span>
+            <span class="gate-info">{{ flight.departureTime | date:'EEE, MMM d, y' }} · {{ flight.originAirport.name }}</span>
           </div>
 
           <div class="line-center">
-            <span class="duration-text">2h 15m</span>
+            <span class="duration-text">{{ formatDuration(flight.durationMinutes) }}</span>
             <div class="line"></div>
-            <span class="stop-info">Non-stop</span>
+            <span class="stop-info">{{ flight.stops === 0 ? 'Non-stop' : (flight.stops === 1 ? '1 stop' : flight.stops + ' stops') }}</span>
           </div>
 
           <div class="time-box">
             <span class="time-large">{{ flight.arrivalTime | date:'HH:mm' }}</span>
             <span class="city-name">{{ flight.destinationAirport.code }}</span>
-            <span class="gate-info">Jul 14, 2026 · T2</span>
+            <span class="gate-info">{{ flight.arrivalTime | date:'EEE, MMM d, y' }} · {{ flight.destinationAirport.name }}</span>
           </div>
         </div>
       </div>
@@ -57,42 +58,42 @@ import { Flight } from '../../models/flight.model';
           <div class="grid-2">
             <div>
               <span class="label">AIRCRAFT</span>
-              <strong>Airbus A330-300</strong>
+              <strong>{{ flight.aircraftType || '—' }}</strong>
             </div>
             <div>
               <span class="label">CABIN</span>
               <strong>{{ flight.cabinClass }}</strong>
             </div>
             <div>
-              <span class="label">FARE FAMILY</span>
-              <strong>Smart Flex</strong>
+              <span class="label">FLIGHT STATUS</span>
+              <strong [ngClass]="{'highlight-green': flight.status === 'SCHEDULED'}">{{ flight.status }}</strong>
             </div>
             <div>
               <span class="label">REFUNDABLE</span>
-              <strong>Yes</strong>
+              <strong>{{ flight.refundable === false ? 'No' : 'Yes' }}</strong>
             </div>
           </div>
         </div>
 
         <!-- Passenger Details Card -->
         <div class="card meta-card">
-          <h3>Passenger Details</h3>
+          <h3>Passenger Amenities</h3>
           <div class="grid-2">
             <div>
-              <span class="label">BAGGAGE</span>
-              <strong>1 carry-on, 1 checked bag</strong>
+              <span class="label">CABIN BAGGAGE</span>
+              <strong>{{ flight.baggageCabin || '—' }}</strong>
+            </div>
+            <div>
+              <span class="label">CHECK-IN BAGGAGE</span>
+              <strong>{{ flight.baggageCheckin || '—' }}</strong>
             </div>
             <div>
               <span class="label">MEAL</span>
-              <strong>Complimentary Hot Meal</strong>
+              <strong>{{ flight.mealIncluded ? 'Complimentary Meal' : 'Not Included' }}</strong>
             </div>
             <div>
               <span class="label">SEATS LEFT</span>
               <strong class="highlight-green">{{ flight.availableSeats }}</strong>
-            </div>
-            <div>
-              <span class="label">ON-TIME</span>
-              <strong>94.8%</strong>
             </div>
           </div>
         </div>
@@ -100,11 +101,14 @@ import { Flight } from '../../models/flight.model';
 
       <!-- Fare Metadata Card -->
       <div class="card fare-card">
-        <h3>Fare Metadata</h3>
+        <h3>Fare Rules & Policy</h3>
+        <p class="fare-rules-text">{{ flight.fareRules || 'Standard airline fare rules apply.' }}</p>
         <div class="tags-row">
-          <span class="badge-tag">🌱 623 kg CO2</span>
-          <span class="badge-tag">📶 High-Speed Wi-Fi</span>
-          <span class="badge-tag">🔌 Power Outlet at Seat</span>
+          <span class="badge-tag" [ngClass]="{'badge-tag-warn': flight.refundable === false}">
+            {{ flight.refundable === false ? 'Non-refundable fare' : 'Refundable fare' }}
+          </span>
+          <span class="badge-tag">{{ flight.mealIncluded ? 'Meal included' : 'Meal not included' }}</span>
+          <span class="badge-tag">{{ flight.baggageCheckin || '—' }} check-in · {{ flight.baggageCabin || '—' }} cabin</span>
         </div>
       </div>
 
@@ -216,6 +220,16 @@ import { Flight } from '../../models/flight.model';
       gap: 16px;
       flex-wrap: wrap;
     }
+    .fare-rules-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .badge-tag-warn {
+      color: #f59e0b !important;
+      border-color: rgba(245, 158, 11, 0.4) !important;
+    }
     .badge-tag {
       background: #111a30;
       border: 1px solid var(--border-color);
@@ -239,6 +253,7 @@ export class FlightDetailComponent implements OnInit {
   private router = inject(Router);
   private flightService = inject(FlightService);
   private changeDetectorRef = inject(ChangeDetectorRef);
+  private errorDialog = inject(ErrorDialogService);
 
   flight: Flight | null = null;
 
@@ -250,11 +265,22 @@ export class FlightDetailComponent implements OnInit {
           this.flight = data;
           this.changeDetectorRef.markForCheck();
         },
-        error: () => {
+        error: (err) => {
           this.changeDetectorRef.markForCheck();
+          this.errorDialog.show(
+            'Flight unavailable',
+            err.error?.message || 'Could not load this flight. It may no longer be listed — please search again.'
+          );
         }
       });
     }
+  }
+
+  formatDuration(minutes: number): string {
+    if (!minutes && minutes !== 0) return '';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
   proceedToBooking() {

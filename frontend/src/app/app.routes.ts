@@ -13,8 +13,6 @@ import { adminGuard, authGuard } from './guards/auth.guard';
 // Additional modular flight components
 import { SearchWithFiltersComponent } from './flights/components/search-with-filters/search-with-filters.component';
 import { MyTripsComponent } from './flights/components/my-trips/my-trips.component';
-import { FlightSearchComponent as ModularFlightSearchComponent } from './flights/components/flight-search/flight-search.component';
-import { MyBookingsComponent as ModularMyBookingsComponent } from './flights/components/my-bookings/my-bookings.component';
 
 export const routes: Routes = [
   // Primary Original Page Routes
@@ -22,7 +20,7 @@ export const routes: Routes = [
   { path: 'search', component: FlightSearchComponent },
   { path: 'flight/:id', component: FlightDetailComponent, canActivate: [authGuard] },
   { path: 'booking/:id', component: BookingComponent, canActivate: [authGuard] },
-  { path: 'my-bookings', component: MyBookingsComponent },
+  { path: 'my-bookings', component: MyBookingsComponent, canActivate: [authGuard] },
   { path: 'assistant', component: AiAssistantComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -30,9 +28,7 @@ export const routes: Routes = [
 
   // Additional Feature Routes (Modular components)
   { path: 'flights/search-with-filters', component: SearchWithFiltersComponent },
-  { path: 'flights/my-trips', component: MyTripsComponent },
-  { path: 'flights/components/search', component: ModularFlightSearchComponent },
-  { path: 'flights/components/my-bookings', component: ModularMyBookingsComponent },
+  { path: 'flights/my-trips', component: MyTripsComponent, canActivate: [authGuard] },
 
   { path: '**', redirectTo: '' }
 ];

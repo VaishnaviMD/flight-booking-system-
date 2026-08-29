@@ -12,4 +12,10 @@ public class AuthResponse {
     private String firstName;
     private String lastName;
     private String role;
+
+    /**
+     * Nested user profile consumed by the Angular frontend
+     * (frontend AuthResponse model expects a `user` object).
+     */
+    private UserResponse user;
 }

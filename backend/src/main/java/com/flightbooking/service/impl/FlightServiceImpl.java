@@ -23,35 +23,23 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public List<FlightResponse> searchFlights(FlightSearchRequest req) {
-        List<Flight> flights;
-
-        if (req.getDepartureDate() != null) {
-            LocalDateTime from = req.getDepartureDate().atStartOfDay();
-            LocalDateTime to = req.getDepartureDate().atTime(23, 59, 59);
-            flights = flightRepository.searchFlights(
-                    req.getOrigin(), req.getDestination(), from, to,
-                    req.getPassengers() > 0 ? req.getPassengers() : 1
-            );
-        } else {
-            flights = List.of();
+        if (req.getDepartureDate() == null) {
+            return List.of();
         }
 
-        // Fallback: If no flights match exact departure date, return flights matching origin & destination
-        if (flights.isEmpty()) {
-            flights = flightRepository.findAll().stream()
-                    .filter(f -> req.getOrigin() == null || req.getOrigin().isBlank() || f.getOrigin().getCode().equalsIgnoreCase(req.getOrigin()))
-                    .filter(f -> req.getDestination() == null || req.getDestination().isBlank() || f.getDestination().getCode().equalsIgnoreCase(req.getDestination()))
-                    .collect(Collectors.toList());
-        }
+        LocalDateTime from = req.getDepartureDate().atStartOfDay();
+        LocalDateTime to = req.getDepartureDate().atTime(23, 59, 59);
+        List<Flight> flights = flightRepository.searchFlights(
+                req.getOrigin(), req.getDestination(), from, to,
+                req.getPassengers() > 0 ? req.getPassengers() : 1
+        );
 
-        // Double Fallback: If still empty (e.g. invalid airport pair), return all available flights
-        if (flights.isEmpty()) {
-            flights = flightRepository.findAll();
-        }
-
-        // Apply optional filters
+        // Apply optional filters — results stay strict: only flights that truly match the
+        // requested route/date are returned (no blanket "return everything" fallback).
         var stream = flights.stream();
 
+        if (req.getCabinClass() != null && !req.getCabinClass().isBlank())
+            stream = stream.filter(f -> f.getCabinClass().name().equalsIgnoreCase(req.getCabinClass()));
         if (req.getMinPrice() != null)
             stream = stream.filter(f -> f.getBasePrice().doubleValue() >= req.getMinPrice());
         if (req.getMaxPrice() != null)
@@ -123,6 +111,12 @@ public class FlightServiceImpl implements FlightService {
                 .availableSeats(f.getAvailableSeats())
                 .cabinClass(f.getCabinClass().name())
                 .status(f.getStatus().name())
+                .aircraftType(f.getAircraftType())
+                .baggageCheckin(f.getBaggageCheckin())
+                .baggageCabin(f.getBaggageCabin())
+                .mealIncluded(f.getMealIncluded())
+                .refundable(f.getRefundable())
+                .fareRules(f.getFareRules())
                 .build();
     }
 }

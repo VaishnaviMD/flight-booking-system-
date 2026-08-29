@@ -3,6 +3,7 @@ package com.flightbooking.service.impl;
 import com.flightbooking.dto.request.LoginRequest;
 import com.flightbooking.dto.request.RegisterRequest;
 import com.flightbooking.dto.response.AuthResponse;
+import com.flightbooking.dto.response.UserResponse;
 import com.flightbooking.exception.AppException;
 import com.flightbooking.model.Role;
 import com.flightbooking.model.User;
@@ -64,6 +65,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthResponse buildAuthResponse(User user) {
+        UserResponse userProfile = UserResponse.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole().name())
+                .build();
+
         return AuthResponse.builder()
                 .accessToken(jwtUtil.generateToken(user))
                 .refreshToken(jwtUtil.generateRefreshToken(user))
@@ -72,6 +82,7 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
+                .user(userProfile)
                 .build();
     }
 }

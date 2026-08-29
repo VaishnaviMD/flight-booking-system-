@@ -5,7 +5,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FlightService } from '../../services/flight.service';
 import { BookingService } from '../../services/booking.service';
 import { PaymentService } from '../../services/payment.service';
-import { HttpClient } from '@angular/common/http';
+import { CouponService } from '../../services/coupon.service';
+import { ToastService } from '../../services/toast.service';
+import { ErrorDialogService } from '../../services/error-dialog.service';
+import { AuthService } from '../../services/auth.service';
 import { Flight } from '../../models/flight.model';
 import { PassengerRequest } from '../../models/booking.model';
 
@@ -101,11 +104,54 @@ import { PassengerRequest } from '../../models/booking.model';
               <div class="form-row grid-2">
                 <div class="form-group">
                   <label>Seat Preference</label>
-                  <input type="text" [(ngModel)]="p.seatNumber" name="seat-{{i}}" placeholder="e.g. 12A">
+                  <select [(ngModel)]="p.seatPreference" name="seatPref-{{i}}">
+                    <option value="">No preference</option>
+                    <option value="WINDOW">Window</option>
+                    <option value="MIDDLE">Middle</option>
+                    <option value="AISLE">Aisle</option>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label>Age</label>
                   <input type="number" [(ngModel)]="p.age" name="age-{{i}}" min="0" placeholder="Age">
+                </div>
+              </div>
+
+              <div class="form-row grid-2">
+                <div class="form-group">
+                  <label>Nationality</label>
+                  <input type="text" [(ngModel)]="p.nationality" name="nationality-{{i}}" placeholder="Nationality">
+                </div>
+                <div class="form-group">
+                  <label>Meal Preference</label>
+                  <select [(ngModel)]="p.mealPreference" name="mealPref-{{i}}">
+                    <option value="">No preference</option>
+                    <option value="VEG">Vegetarian</option>
+                    <option value="NON_VEG">Non-Vegetarian</option>
+                    <option value="JAIN">Jain</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row grid-2">
+                <div class="form-group">
+                  <label>Special Assistance</label>
+                  <input type="text" [(ngModel)]="p.specialAssistance" name="assist-{{i}}" placeholder="e.g. Wheelchair (optional)">
+                </div>
+                <div class="form-group">
+                  <label>Date of Birth</label>
+                  <input type="date" [(ngModel)]="p.dateOfBirth" name="dob2-{{i}}" [max]="today">
+                </div>
+              </div>
+
+              <div class="form-row grid-2">
+                <div class="form-group">
+                  <label>Emergency Contact Name</label>
+                  <input type="text" [(ngModel)]="p.emergencyContactName" name="emName-{{i}}" placeholder="Emergency contact (optional)">
+                </div>
+                <div class="form-group">
+                  <label>Emergency Contact Phone</label>
+                  <input type="tel" [(ngModel)]="p.emergencyContactPhone" name="emPhone-{{i}}" placeholder="Emergency phone (optional)">
                 </div>
               </div>
 
@@ -114,24 +160,24 @@ import { PassengerRequest } from '../../models/booking.model';
               </button>
             </div>
 
-            <!-- Extras Selection (Baggage & Seats) -->
-            <div class="extras-grid">
-              <div class="extra-box">
-                <span class="material-icons icon">luggage</span>
-                <div>
-                  <h4>Baggage Options</h4>
-                  <p>Add extra checked bags for your journey.</p>
-                </div>
-                <button class="btn btn-outline btn-sm">Select Baggage</button>
-              </div>
+            <button (click)="addPassenger()" class="btn btn-outline add-passenger-btn">
+              <span class="material-icons">person_add</span> Add Another Passenger
+            </button>
+          </div>
 
-              <div class="extra-box">
-                <span class="material-icons icon">event_seat</span>
-                <div>
-                  <h4>Seat Selection</h4>
-                  <p>Choose your preferred seat now.</p>
-                </div>
-                <button class="btn btn-outline btn-sm">Choose Seats</button>
+          <!-- Contact Details Section -->
+          <div class="card form-section">
+            <h3><span class="material-icons title-icon">contacts</span> Contact Details</h3>
+            <p class="section-sub">Booking updates and the e-ticket will be sent to this contact.</p>
+
+            <div class="form-row grid-2">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="email" name="contactEmail" placeholder="you@example.com">
+              </div>
+              <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="tel" [(ngModel)]="phone" name="contactPhone" placeholder="Mobile number">
               </div>
             </div>
           </div>
@@ -182,8 +228,9 @@ import { PassengerRequest } from '../../models/booking.model';
                 <span>{{ flight.originAirport.city }} ({{ flight.originAirport.code }})</span>
               </div>
               <div class="line-center">
-                <span>2h 15m</span>
+                <span>{{ formatDuration(flight.durationMinutes) }}</span>
                 <div class="line"></div>
+                <span>{{ flight.stops === 0 ? 'Non-stop' : flight.stops + ' stop(s)' }}</span>
               </div>
               <div class="time-pt">
                 <strong>{{ flight.arrivalTime | date:'HH:mm' }}</strong>
@@ -192,7 +239,7 @@ import { PassengerRequest } from '../../models/booking.model';
             </div>
 
             <div class="flight-chip">
-              <span>Flight {{ flight.flightNumber }}</span>
+              <span>Flight {{ flight.flightNumber }} · {{ flight.airline.name }}</span>
             </div>
 
             <!-- Promo Coupon Application Box -->
@@ -207,7 +254,7 @@ import { PassengerRequest } from '../../models/booking.model';
 
             <div class="cost-breakdown">
               <div class="cost-row">
-                <span>1x Adult Ticket</span>
+                <span>{{ passengers.length }} × {{ flight.cabinClass }} Ticket (₹{{ flight.basePrice }} each)</span>
                 <strong>₹{{ flight.basePrice * passengers.length }}</strong>
               </div>
               <div class="cost-row">
@@ -452,14 +499,19 @@ export class BookingComponent implements OnInit {
   private flightService = inject(FlightService);
   private bookingService = inject(BookingService);
   private paymentService = inject(PaymentService);
-  private http = inject(HttpClient);
+  private couponService = inject(CouponService);
+  private authService = inject(AuthService);
+  private toast = inject(ToastService);
+  private errorDialog = inject(ErrorDialogService);
   private changeDetectorRef = inject(ChangeDetectorRef);
 
   flight: Flight | null = null;
   submitting = false;
+  today = new Date().toISOString().split('T')[0];
 
-  email = 'user@example.com';
-  phone = '+1 555 0192';
+  // Prefilled from the logged-in user's profile — no hardcoded contacts.
+  email = '';
+  phone = '';
 
   cardNumber = '0000 0000 0000 0000';
   expiry = '12/28';
@@ -470,11 +522,15 @@ export class BookingComponent implements OnInit {
   discountAmount = 0;
   couponMsg = '';
 
-  passengers: PassengerRequest[] = [
-    { title: 'Mr.', firstName: '', lastName: '', age: 26, gender: 'MALE', type: 'ADULT', passportNumber: '', seatNumber: '' }
-  ];
+  passengers: PassengerRequest[] = [this.emptyPassenger()];
 
   ngOnInit() {
+    const user = this.authService.currentUser();
+    if (user) {
+      this.email = user.email || '';
+      this.phone = user.phone || '';
+    }
+
     const flightId = Number(this.route.snapshot.paramMap.get('id'));
     if (flightId) {
       this.flightService.getFlightById(flightId).subscribe({
@@ -482,46 +538,90 @@ export class BookingComponent implements OnInit {
           this.flight = data;
           this.changeDetectorRef.markForCheck();
         },
-        error: () => this.changeDetectorRef.markForCheck()
+        error: (err) => {
+          this.changeDetectorRef.markForCheck();
+          this.errorDialog.show(
+            'Flight unavailable',
+            err.error?.message || 'Could not load this flight for booking. Please search again.'
+          );
+        }
       });
     }
   }
 
-  applyCoupon() {
-    if (!this.couponCode.trim()) return;
-    const baseTotal = (this.flight ? this.flight.basePrice : 4500) + 399;
+  emptyPassenger(): PassengerRequest {
+    return {
+      title: 'Mr.',
+      firstName: '',
+      lastName: '',
+      age: undefined,
+      gender: 'MALE',
+      type: 'ADULT',
+      nationality: 'Indian',
+      dateOfBirth: '',
+      passportNumber: '',
+      mealPreference: '',
+      seatPreference: '',
+      specialAssistance: '',
+      emergencyContactName: '',
+      emergencyContactPhone: '',
+      seatNumber: ''
+    };
+  }
 
-    this.http.get<any>(`http://localhost:8080/api/coupons/apply?code=${this.couponCode}&amount=${baseTotal}`).subscribe({
+  /** Client-side validation mirroring the backend's @Valid rules. */
+  validateForm(): string | null {
+    if (!this.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+      return 'Please enter a valid contact email address.';
+    }
+    for (let i = 0; i < this.passengers.length; i++) {
+      const p = this.passengers[i];
+      if (!p.firstName?.trim() || !p.lastName?.trim()) {
+        return `Passenger ${i + 1}: first name and last name are required.`;
+      }
+      if (!p.dateOfBirth) {
+        return `Passenger ${i + 1}: date of birth is required.`;
+      }
+    }
+    return null;
+  }
+
+  applyCoupon() {
+    if (!this.couponCode.trim() || !this.flight) return;
+    const baseTotal = this.flight.basePrice * this.passengers.length + 399;
+
+    this.couponService.applyCoupon(this.couponCode, baseTotal).subscribe({
       next: (res) => {
+        this.discountAmount = res.valid ? res.discountAmount : 0;
+        this.couponMsg = res.message;
         if (res.valid) {
-          this.discountAmount = res.discountAmount;
-          this.couponMsg = res.message;
-        } else {
-          this.discountAmount = 0;
-          this.couponMsg = res.message;
+          this.toast.success(res.message);
         }
         this.changeDetectorRef.markForCheck();
       },
-      error: () => {
-        if (this.couponCode.toUpperCase() === 'FLY500') {
-          this.discountAmount = 500;
-          this.couponMsg = 'Coupon FLY500 applied! Saved ₹500';
-        } else {
-          this.discountAmount = 0;
-          this.couponMsg = 'Invalid coupon code';
-        }
+      error: (err) => {
+        this.discountAmount = 0;
+        this.couponMsg = err.error?.message || 'Could not validate the coupon right now.';
         this.changeDetectorRef.markForCheck();
       }
     });
   }
 
   getFinalTotal(): number {
-    const baseTotal = ((this.flight ? this.flight.basePrice : 4500) * this.passengers.length) + 399;
+    if (!this.flight) return 0;
+    const baseTotal = this.flight.basePrice * this.passengers.length + 399;
     return Math.max(0, baseTotal - this.discountAmount);
   }
 
+  formatDuration(minutes: number): string {
+    if (!minutes && minutes !== 0) return '';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
   addPassenger(): void {
-    this.passengers.push({ firstName: '', lastName: '', age: 0, gender: 'MALE', type: 'ADULT', passportNumber: '', seatNumber: '' });
+    this.passengers.push(this.emptyPassenger());
   }
 
   removePassenger(index: number): void {
@@ -530,18 +630,35 @@ export class BookingComponent implements OnInit {
 
   confirmBookingAndPay() {
     if (!this.flight) return;
+
+    const validationError = this.validateForm();
+    if (validationError) {
+      this.errorDialog.show('Check passenger details', validationError);
+      return;
+    }
+
     this.submitting = true;
 
     const bookingRequest = {
       flightId: this.flight.id,
       cabinClass: this.flight.cabinClass,
       passengerCount: this.passengers.length,
+      contactEmail: this.email,
+      contactPhone: this.phone,
       passengers: this.passengers.map(p => ({
         title: p.title,
         firstName: p.firstName,
         lastName: p.lastName,
         dateOfBirth: p.dateOfBirth,
+        age: p.age,
+        gender: p.gender,
+        nationality: p.nationality,
         passportNumber: p.passportNumber,
+        mealPreference: p.mealPreference,
+        seatPreference: p.seatPreference,
+        specialAssistance: p.specialAssistance,
+        emergencyContactName: p.emergencyContactName,
+        emergencyContactPhone: p.emergencyContactPhone,
         seatNumber: p.seatNumber,
         type: p.type
       }))
@@ -556,13 +673,28 @@ export class BookingComponent implements OnInit {
           cardNumber: this.cardNumber
         }).subscribe({
           next: () => {
-            alert(`🎉 Booking Confirmed!\nPNR: ${res.pnr}`);
+            this.toast.success(`Booking confirmed! PNR: ${res.pnr}`);
             this.router.navigate(['/my-bookings']);
           },
-          error: () => this.submitting = false
+          error: (err) => {
+            this.submitting = false;
+            this.errorDialog.show(
+              'Payment failed',
+              (err.error?.message || 'The payment could not be processed.') +
+              ` Your booking (PNR: ${res.pnr}) is saved — please retry the payment from My Bookings.`
+            );
+            this.changeDetectorRef.markForCheck();
+          }
         });
       },
-      error: () => this.submitting = false
+      error: (err) => {
+        this.submitting = false;
+        this.errorDialog.show(
+          'Booking failed',
+          err.error?.message || 'Could not complete the booking. Please try again.'
+        );
+        this.changeDetectorRef.markForCheck();
+      }
     });
   }
 }

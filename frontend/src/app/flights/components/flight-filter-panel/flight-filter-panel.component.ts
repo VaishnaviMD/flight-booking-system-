@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AIRLINES } from '../../../data/flight-data';
+import { FlightService } from '../../../services/flight.service';
+import { Airline } from '../../../models/flight.model';
 
 export interface FilterState {
   maxPrice: number;
@@ -16,12 +17,14 @@ export interface FilterState {
   imports: [CommonModule, FormsModule],
   templateUrl: './flight-filter-panel.component.html',
 })
-export class FlightFilterPanelComponent {
+export class FlightFilterPanelComponent implements OnInit {
   @Input() maxPriceLimit = 15000;
 
   @Output() filterChange = new EventEmitter<FilterState>();
 
-  airlines = AIRLINES;
+  private flightService = inject(FlightService);
+
+  airlines: Airline[] = [];
 
   state: FilterState = {
     maxPrice: 15000,
@@ -29,6 +32,13 @@ export class FlightFilterPanelComponent {
     stops: 'ALL',
     sortBy: 'PRICE_LOW'
   };
+
+  ngOnInit(): void {
+    this.flightService.getAirlines().subscribe({
+      next: (data: Airline[]) => (this.airlines = data),
+      error: () => (this.airlines = [])
+    });
+  }
 
   onAirlineToggle(code: string, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;

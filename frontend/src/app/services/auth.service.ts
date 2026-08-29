@@ -1,63 +1,29 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, tap } from 'rxjs';
+import { JwtHelperService } from '@auth0/angular-jwt';
+import { environment } from '../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, UserResponse } from '../models/auth.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api/auth';
-  
+  private apiUrl = `${environment.apiUrl}/auth`;
+  private jwtHelper = new JwtHelperService();
+  private http = inject(HttpClient);
+
   currentUser = signal<UserResponse | null>(this.getStoredUser());
   token = signal<string | null>(localStorage.getItem('token'));
 
-  constructor(private http: HttpClient) {}
-
   register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
-      tap(res => this.setSession(res)),
-      catchError(() => {
-        const mockRes: AuthResponse = {
-          accessToken: 'mock-jwt-token-12345',
-          refreshToken: 'mock-refresh-token-12345',
-          tokenType: 'Bearer',
-          user: {
-            id: 1,
-            email: request.email,
-            firstName: request.firstName,
-            lastName: request.lastName,
-            phone: request.phone,
-            role: request.email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
-          }
-        };
-        this.setSession(mockRes);
-        return of(mockRes);
-      })
-    );
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request)
+      .pipe(tap(res => this.setSession(res)));
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
-      tap(res => this.setSession(res)),
-      catchError(() => {
-        const mockRes: AuthResponse = {
-          accessToken: 'mock-jwt-token-12345',
-          refreshToken: 'mock-refresh-token-12345',
-          tokenType: 'Bearer',
-          user: {
-            id: 1,
-            email: request.email,
-            firstName: request.email.split('@')[0],
-            lastName: 'User',
-            role: request.email.includes('admin') ? 'ROLE_ADMIN' : 'ROLE_USER'
-          }
-        };
-        this.setSession(mockRes);
-        return of(mockRes);
-      })
-    );
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request)
+      .pipe(tap(res => this.setSession(res)));
   }
 
   logout() {
@@ -72,20 +38,23 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  /** A session is valid only while its JWT has not expired. */
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    return !!token && !this.jwtHelper.isTokenExpired(token);
   }
 
   isAdmin(): boolean {
-    const user = this.currentUser();
-    return user?.role === 'ROLE_ADMIN';
+    return this.currentUser()?.role === 'ADMIN';
   }
 
   private setSession(authResult: AuthResponse) {
     localStorage.setItem('token', authResult.accessToken);
     localStorage.setItem('refreshToken', authResult.refreshToken);
-    localStorage.setItem('user', JSON.stringify(authResult.user));
-    this.currentUser.set(authResult.user);
+    if (authResult.user) {
+      localStorage.setItem('user', JSON.stringify(authResult.user));
+      this.currentUser.set(authResult.user);
+    }
     this.token.set(authResult.accessToken);
   }
 
@@ -99,3 +68,4 @@ export class AuthService {
     }
   }
 }
+

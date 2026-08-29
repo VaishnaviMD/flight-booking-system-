@@ -26,4 +26,12 @@ public class FlightResponse {
     private int availableSeats;
     private String cabinClass;
     private String status;
+
+    // ---- Flight metadata ----
+    private String aircraftType;
+    private String baggageCheckin;
+    private String baggageCabin;
+    private Boolean mealIncluded;
+    private Boolean refundable;
+    private String fareRules;
 }

@@ -8,8 +8,8 @@ import java.util.List;
 public interface BookingService {
     BookingResponse createBooking(BookingRequest request, String userEmail);
     List<BookingResponse> getMyBookings(String userEmail);
-    BookingResponse getByPnr(String pnr);
-    BookingResponse getById(Long id);
+    BookingResponse getByPnr(String pnr, String userEmail);
+    BookingResponse getById(Long id, String userEmail);
     BookingResponse cancelBooking(Long id, String userEmail);
     List<BookingResponse> getAllBookings();
 }

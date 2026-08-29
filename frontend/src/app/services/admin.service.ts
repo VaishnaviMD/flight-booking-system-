@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { BookingResponse } from '../models/booking.model';
 import { Flight } from '../models/flight.model';
 import { UserResponse } from '../models/auth.model';
+import { mapFlightResponse } from './flight.service';
 
 export interface DashboardStats {
   totalBookings: number;
@@ -17,20 +19,25 @@ export interface DashboardStats {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://localhost:8080/api/admin';
-
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${environment.apiUrl}/admin`;
+  private http = inject(HttpClient);
 
   getDashboardStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${this.apiUrl}/dashboard`);
   }
 
   getAllBookings(): Observable<BookingResponse[]> {
-    return this.http.get<BookingResponse[]>(`${this.apiUrl}/bookings`);
+    return this.http.get<any[]>(`${this.apiUrl}/bookings`)
+      .pipe(map(list => list.map(b => ({
+        ...b,
+        totalPrice: Number(b.totalAmount ?? b.totalPrice ?? 0),
+        flight: b.flight ? mapFlightResponse(b.flight) : (null as any)
+      }))));
   }
 
   getAllFlights(): Observable<Flight[]> {
-    return this.http.get<Flight[]>(`${this.apiUrl}/flights`);
+    return this.http.get<any[]>(`${this.apiUrl}/flights`)
+      .pipe(map(list => list.map(mapFlightResponse)));
   }
 
   getAllUsers(): Observable<UserResponse[]> {

@@ -58,4 +58,23 @@ public class Flight {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FlightStatus status;
+
+    // ---- Flight metadata shown on the details page ----
+    @Column(name = "aircraft_type", length = 100)
+    private String aircraftType;
+
+    @Column(name = "baggage_checkin", length = 100)
+    private String baggageCheckin;
+
+    @Column(name = "baggage_cabin", length = 100)
+    private String baggageCabin;
+
+    @Column(name = "meal_included")
+    private Boolean mealIncluded;
+
+    @Column(name = "refundable")
+    private Boolean refundable;
+
+    @Column(name = "fare_rules", length = 1000)
+    private String fareRules;
 }

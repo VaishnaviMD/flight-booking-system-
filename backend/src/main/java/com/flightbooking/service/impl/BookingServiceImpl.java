@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -64,6 +66,8 @@ public class BookingServiceImpl implements BookingService {
                 .cabinClass(cabinClass)
                 .totalAmount(total)
                 .status(BookingStatus.CONFIRMED)
+                .contactEmail(req.getContactEmail())
+                .contactPhone(req.getContactPhone())
                 .build();
 
         List<Passenger> passengers = req.getPassengers().stream().map(p -> Passenger.builder()
@@ -71,9 +75,18 @@ public class BookingServiceImpl implements BookingService {
                 .firstName(p.getFirstName())
                 .lastName(p.getLastName())
                 .dateOfBirth(p.getDateOfBirth())
+                .age(p.getAge())
+                .gender(p.getGender())
+                .nationality(p.getNationality())
                 .passportNumber(p.getPassportNumber())
+                .mealPreference(p.getMealPreference())
+                .seatPreference(p.getSeatPreference())
+                .specialAssistance(p.getSpecialAssistance())
+                .emergencyContactName(p.getEmergencyContactName())
+                .emergencyContactPhone(p.getEmergencyContactPhone())
                 .seatNumber(p.getSeatNumber())
                 .type(p.getType() != null ? PassengerType.valueOf(p.getType().toUpperCase()) : PassengerType.ADULT)
+                .ticketNumber(generateTicketNumber())
                 .build()).collect(Collectors.toList());
 
         booking.setPassengers(passengers);
@@ -93,15 +106,29 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingResponse getByPnr(String pnr) {
-        return toResponse(bookingRepository.findByPnr(pnr)
-                .orElseThrow(() -> new AppException("Booking not found", HttpStatus.NOT_FOUND)));
+    public BookingResponse getByPnr(String pnr, String userEmail) {
+        return toResponse(getOwnedBooking(bookingRepository.findByPnr(pnr), userEmail, "Booking not found"));
     }
 
     @Override
-    public BookingResponse getById(Long id) {
-        return toResponse(bookingRepository.findById(id)
-                .orElseThrow(() -> new AppException("Booking not found", HttpStatus.NOT_FOUND)));
+    public BookingResponse getById(Long id, String userEmail) {
+        return toResponse(getOwnedBooking(bookingRepository.findById(id), userEmail, "Booking not found"));
+    }
+
+    /**
+     * Fetches a booking and verifies the caller owns it (or is an ADMIN).
+     * Prevents any authenticated user from reading someone else's booking.
+     */
+    private Booking getOwnedBooking(Optional<Booking> booking, String userEmail, String notFoundMessage) {
+        User caller = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        Booking b = booking.orElseThrow(() -> new AppException(notFoundMessage, HttpStatus.NOT_FOUND));
+        boolean isOwner = b.getUser().getId().equals(caller.getId());
+        boolean isAdmin = caller.getRole() == Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new AppException("You are not authorized to view this booking", HttpStatus.FORBIDDEN);
+        }
+        return b;
     }
 
     @Override
@@ -112,7 +139,15 @@ public class BookingServiceImpl implements BookingService {
         if (!booking.getUser().getEmail().equals(userEmail)) {
             throw new AppException("Unauthorized", HttpStatus.FORBIDDEN);
         }
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new AppException("Booking is already cancelled", HttpStatus.BAD_REQUEST);
+        }
         booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelledAt(LocalDateTime.now());
+        // Refund estimate (matches the 20% airline cancellation fee shown in the UI dialog).
+        // Full refund policy engine arrives with the cancellation module.
+        BigDecimal refund = booking.getTotalAmount().multiply(BigDecimal.valueOf(0.8));
+        booking.setRefundAmount(refund);
         Flight flight = booking.getFlight();
         flight.setAvailableSeats(flight.getAvailableSeats() + booking.getPassengers().size());
         flightRepository.save(flight);
@@ -127,10 +162,21 @@ public class BookingServiceImpl implements BookingService {
     private BookingResponse toResponse(Booking b) {
         List<BookingResponse.PassengerResponse> passengerResponses = b.getPassengers().stream()
                 .map(p -> BookingResponse.PassengerResponse.builder()
+                        .id(p.getId())
                         .firstName(p.getFirstName())
                         .lastName(p.getLastName())
+                        .gender(p.getGender())
+                        .age(p.getAge())
+                        .nationality(p.getNationality())
                         .seatNumber(p.getSeatNumber())
+                        .passportNumber(p.getPassportNumber())
+                        .ticketNumber(p.getTicketNumber())
                         .type(p.getType() != null ? p.getType().name() : "ADULT")
+                        .mealPreference(p.getMealPreference())
+                        .seatPreference(p.getSeatPreference())
+                        .specialAssistance(p.getSpecialAssistance())
+                        .emergencyContactName(p.getEmergencyContactName())
+                        .emergencyContactPhone(p.getEmergencyContactPhone())
                         .build())
                 .collect(Collectors.toList());
 
@@ -145,7 +191,17 @@ public class BookingServiceImpl implements BookingService {
                 .totalPrice(b.getTotalAmount())
                 .bookedAt(b.getBookedAt())
                 .createdAt(b.getBookedAt().toString())
+                .contactEmail(b.getContactEmail())
+                .contactPhone(b.getContactPhone())
+                .cancellationReason(b.getCancellationReason())
+                .refundAmount(b.getRefundAmount())
+                .cancelledAt(b.getCancelledAt())
                 .passengers(passengerResponses)
                 .build();
+    }
+
+    /** Generates a unique ticket number per passenger, e.g. SK-4821590371. */
+    private String generateTicketNumber() {
+        return "SK-" + UUID.randomUUID().toString().replaceAll("[^0-9]", "").substring(0, 10);
     }
 }

@@ -33,13 +33,17 @@ public class BookingController {
     }
 
     @GetMapping("/pnr/{pnr}")
-    public ResponseEntity<BookingResponse> getByPnr(@PathVariable String pnr) {
-        return ResponseEntity.ok(bookingService.getByPnr(pnr));
+    public ResponseEntity<BookingResponse> getByPnr(
+            @PathVariable String pnr,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(bookingService.getByPnr(pnr, userDetails.getUsername()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.getById(id));
+    public ResponseEntity<BookingResponse> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(bookingService.getById(id, userDetails.getUsername()));
     }
 
     @PutMapping("/{id}/cancel")

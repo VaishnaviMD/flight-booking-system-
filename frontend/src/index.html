@@ -13,5 +13,14 @@
 </head>
 <body>
   <app-root></app-root>
+  <script>
+    // Apply the persisted theme before Angular bootstraps to avoid a flash
+    // of the wrong theme. Dark is the default when nothing is stored.
+    try {
+      if (localStorage.getItem('skyflow_theme') === 'light') {
+        document.body.classList.add('light-theme');
+      }
+    } catch (e) { /* keep default dark */ }
+  </script>
 </body>
 </html>

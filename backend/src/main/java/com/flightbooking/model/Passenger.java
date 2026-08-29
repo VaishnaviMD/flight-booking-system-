@@ -32,4 +32,31 @@ public class Passenger {
 
     @Enumerated(EnumType.STRING)
     private PassengerType type;
+
+    // ---- Extended traveller details collected on the booking page ----
+    @Column(length = 20)
+    private String gender;
+
+    private Integer age;
+
+    @Column(length = 100)
+    private String nationality;
+
+    @Column(name = "meal_preference", length = 50)
+    private String mealPreference;
+
+    @Column(name = "seat_preference", length = 50)
+    private String seatPreference;
+
+    @Column(name = "special_assistance", length = 200)
+    private String specialAssistance;
+
+    @Column(name = "emergency_contact_name", length = 100)
+    private String emergencyContactName;
+
+    @Column(name = "emergency_contact_phone", length = 20)
+    private String emergencyContactPhone;
+
+    @Column(name = "ticket_number", length = 30)
+    private String ticketNumber;
 }

@@ -18,6 +18,11 @@ public class BookingResponse {
     private BigDecimal totalPrice;
     private LocalDateTime bookedAt;
     private String createdAt;
+    private String contactEmail;
+    private String contactPhone;
+    private String cancellationReason;
+    private BigDecimal refundAmount;
+    private LocalDateTime cancelledAt;
     private List<PassengerResponse> passengers;
 
     @Data @Builder
@@ -27,9 +32,15 @@ public class BookingResponse {
         private String lastName;
         private String gender;
         private Integer age;
+        private String nationality;
         private String seatNumber;
         private String passportNumber;
         private String ticketNumber;
         private String type;
+        private String mealPreference;
+        private String seatPreference;
+        private String specialAssistance;
+        private String emergencyContactName;
+        private String emergencyContactPhone;
     }
 }
