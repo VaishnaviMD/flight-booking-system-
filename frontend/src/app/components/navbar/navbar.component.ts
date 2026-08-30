@@ -40,7 +40,10 @@ import { ThemeService } from '../../services/theme.service';
 
           <ng-template #userMenu>
             <div class="user-profile">
-              <span class="user-greeting">Hi, {{ authService.currentUser()?.firstName }}</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="user-greeting">Hi, {{ authService.currentUser()?.firstName }}</span>
+                <span *ngIf="authService.isAdmin()" class="admin-tag">ADMIN</span>
+              </div>
               <button (click)="logout()" class="btn btn-outline btn-sm">Log Out</button>
             </div>
           </ng-template>
@@ -139,6 +142,16 @@ import { ThemeService } from '../../services/theme.service';
     .user-greeting {
       font-weight: 600;
       color: var(--text-main);
+    }
+    .admin-tag {
+      background: rgba(37, 99, 235, 0.2);
+      color: #38bdf8;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      border: 1px solid rgba(56, 189, 248, 0.4);
     }
     .btn-sm {
       padding: 6px 12px;

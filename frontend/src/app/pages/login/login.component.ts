@@ -159,9 +159,17 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.cdr.detectChanges();
-        this.toast.success(`Welcome back, ${res.firstName || 'Traveller'}!`);
-        const target = (this.returnUrl && this.returnUrl !== '/login' && this.returnUrl !== '/register' && this.returnUrl !== '') ? this.returnUrl : '/';
-        this.router.navigate([target]);
+
+        const isAdmin = res.role === 'ADMIN' || this.authService.isAdmin();
+        if (isAdmin) {
+          this.toast.success(`Welcome to SkyFlow Operations Console, ${res.firstName || 'Administrator'}!`);
+          const target = (this.returnUrl && this.returnUrl !== '/' && this.returnUrl !== '/login' && this.returnUrl !== '/register' && this.returnUrl !== '') ? this.returnUrl : '/admin';
+          this.router.navigate([target]);
+        } else {
+          this.toast.success(`Welcome back, ${res.firstName || 'Traveller'}!`);
+          const target = (this.returnUrl && this.returnUrl !== '/login' && this.returnUrl !== '/register' && this.returnUrl !== '') ? this.returnUrl : '/';
+          this.router.navigate([target]);
+        }
       },
       error: (err) => {
         this.loading = false;

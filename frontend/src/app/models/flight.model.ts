@@ -24,6 +24,7 @@ export interface Flight {
   durationMinutes: number;
   stops: number;
   basePrice: number;
+  totalSeats?: number;
   availableSeats: number;
   cabinClass: 'ECONOMY' | 'PREMIUM_ECONOMY' | 'BUSINESS' | 'FIRST';
   status: 'SCHEDULED' | 'DELAYED' | 'CANCELLED' | 'COMPLETED';

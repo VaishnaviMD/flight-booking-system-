@@ -40,6 +40,20 @@ export class AdminService {
       .pipe(map(list => list.map(mapFlightResponse)));
   }
 
+  createFlight(payload: any): Observable<Flight> {
+    return this.http.post<any>(`${this.apiUrl}/flights`, payload)
+      .pipe(map(mapFlightResponse));
+  }
+
+  updateFlightStatus(flightId: number, status: string): Observable<Flight> {
+    return this.http.patch<any>(`${this.apiUrl}/flights/${flightId}/status?status=${status}`, {})
+      .pipe(map(mapFlightResponse));
+  }
+
+  deleteFlight(flightId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/flights/${flightId}`);
+  }
+
   getAllUsers(): Observable<UserResponse[]> {
     return this.http.get<UserResponse[]>(`${this.apiUrl}/users`);
   }

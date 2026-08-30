@@ -3,6 +3,8 @@ package com.flightbooking.controller;
 import com.flightbooking.dto.response.BookingResponse;
 import com.flightbooking.dto.response.FlightResponse;
 import com.flightbooking.dto.response.UserResponse;
+import com.flightbooking.exception.AppException;
+import com.flightbooking.model.Flight;
 import com.flightbooking.model.FlightStatus;
 import com.flightbooking.repository.BookingRepository;
 import com.flightbooking.repository.FlightRepository;
@@ -10,6 +12,7 @@ import com.flightbooking.service.BookingService;
 import com.flightbooking.service.FlightService;
 import com.flightbooking.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +51,30 @@ public class AdminController {
     @GetMapping("/flights")
     public ResponseEntity<List<FlightResponse>> getAllFlights() {
         return ResponseEntity.ok(flightService.getAll());
+    }
+
+    @PostMapping("/flights")
+    public ResponseEntity<FlightResponse> createFlight(@RequestBody FlightResponse request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.create(request));
+    }
+
+    @PatchMapping("/flights/{id}/status")
+    public ResponseEntity<FlightResponse> updateFlightStatus(@PathVariable Long id, @RequestParam String status) {
+        Flight flight = flightRepository.findById(id)
+                .orElseThrow(() -> new AppException("Flight not found with ID: " + id, HttpStatus.NOT_FOUND));
+        try {
+            flight.setStatus(FlightStatus.valueOf(status.toUpperCase().trim()));
+            flightRepository.save(flight);
+        } catch (IllegalArgumentException e) {
+            throw new AppException("Invalid status: " + status + ". Allowed: SCHEDULED, DELAYED, CANCELLED, COMPLETED, IN_AIR", HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok(flightService.toResponse(flight));
+    }
+
+    @DeleteMapping("/flights/{id}")
+    public ResponseEntity<Map<String, String>> deleteFlight(@PathVariable Long id) {
+        flightService.delete(id);
+        return ResponseEntity.ok(Map.of("message", "Flight " + id + " deleted successfully"));
     }
 
     @GetMapping("/users")

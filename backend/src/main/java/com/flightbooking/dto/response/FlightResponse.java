@@ -23,6 +23,7 @@ public class FlightResponse {
     private int durationMinutes;
     private int stops;
     private BigDecimal basePrice;
+    private int totalSeats;
     private int availableSeats;
     private String cabinClass;
     private String status;

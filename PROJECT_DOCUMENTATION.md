@@ -60,28 +60,33 @@ npm start
 mvn test -f backend/pom.xml
 ```
 
-#### Step 6: Access the Application
-- **Web Application**: Open [http://localhost:4200](http://localhost:4200) in your browser.
+#### Step 6: Access the Application & Default Credentials
+- **Web Application**: [http://localhost:4200](http://localhost:4200)
+- **AI Assistant**: [http://localhost:4200/assistant](http://localhost:4200/assistant)
+- **Admin Operations Console**: [http://localhost:4200/admin](http://localhost:4200/admin)
 - **Backend API & Swagger Docs**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **AI Assistant**: Navigate to [http://localhost:4200/assistant](http://localhost:4200/assistant)
+
+#### Default Accounts:
+- 🛡️ **Admin Account**: `admin@skyflow.com` / `Admin@123` *(Redirects to Admin Console)*
+- 👤 **Customer Account**: `priya@example.com` / `Admin@123` *(Redirects to Flight Search)*
 
 ---
 
 # 🚀 PART 1: Project Features, Architecture & Tools Used
 
 ### 1. Project Overview
-**SkyFlow** is a modern, enterprise-grade flight search, reservation, and passenger management system featuring real-time flight lookups, interactive e-ticketing, intelligent age and fare computations, and an integrated local AI assistant powered by **Ollama (`llama3.2:1b`)** and **Model Context Protocol (MCP)**.
+**SkyFlow** is a modern, enterprise-grade flight search, reservation, and passenger management system featuring real-time flight lookups, interactive e-ticketing, intelligent age and fare computations, a complete Admin Operations Control Center, and an integrated local AI assistant powered by **Ollama (`llama3.2:1b`)** and **Model Context Protocol (MCP)**.
 
 ---
 
 ### 2. Key Features
 
-1. **User Authentication & Authorization (JWT Security)**:
+1. **User & Admin Authentication (JWT Security)**:
    - Secure User Registration and Login with signed **JSON Web Tokens (JWT)** via HMAC-SHA256 (`JwtUtil.java`, `JwtAuthFilter.java`).
    - Password encryption using BCrypt.
    - Validation ensuring only registered database accounts can log in.
-   - Role-Based Access Control (`ROLE_USER`, `ROLE_ADMIN`).
-   - Automatic `Authorization: Bearer <token>` attachment on protected API endpoints (`/api/bookings/**`, `/api/payments/**`, `/api/users/**`).
+   - Smart post-login redirection: Admins go directly to `/admin`, while regular users go to `/`.
+   - Role-Based Access Control (`ROLE_USER`, `ROLE_ADMIN`) protecting admin routes and backend endpoints (`/api/admin/**`).
 
 2. **Flight Search & Multi-Filter Engine**:
    - Search flights across major Indian metro hubs (DEL, BOM, BLR, MAA, HYD, CCU, COK, PNQ, AMD, GOI).
@@ -100,12 +105,20 @@ mvn test -f backend/pom.xml
    - Printable E-Ticket capability (Save as PDF / Print).
    - One-click cancellation with automated 24-hour refund calculation.
 
-5. **Theme-Aware Modern UI**:
+5. **Admin Operations Control Center (`/admin`)**:
+   - **Interactive Route Creator**: Create and schedule new flights with airlines, routes, fares, and seats.
+   - **Flight Status Management**: Real-time status cycling (`SCHEDULED`, `DELAYED`, `CANCELLED`, `COMPLETED`) and flight deletion.
+   - **Fleet Management**: Aircraft registry, live maintenance toggles (`Operational` / `In Maintenance`), and CSV export.
+   - **Customer Bookings Directory**: System-wide reservations with live PNR search.
+   - **Registered Users Directory**: User profile and role management (`ADMIN`/`USER`).
+   - **System Diagnostics**: Live status monitor for Spring Boot, PostgreSQL, Ollama AI, and MCP Tools.
+
+6. **Theme-Aware Modern UI**:
    - Sleek dark theme with dark navy surfaces and emerald green accents (`#00dc82`).
    - Seamless light theme toggle.
    - WCAG-compliant high-contrast typography.
 
-6. **Ollama AI Assistant & Model Context Protocol (MCP)**:
+7. **Ollama AI Assistant & Model Context Protocol (MCP)**:
    - Local LLM generation via Ollama `llama3.2:1b`.
    - MCP Server exposing 5 live database tools (`search_flights`, `get_baggage_allowance`, `get_cancellation_policy`, `get_airports_list`, `get_passenger_age_rules`).
    - Dedicated root `mcp/` directory with `mcp-server-config.json`, documentation, and test scripts.
@@ -218,6 +231,15 @@ graph TD
   - `ChatbotServiceImplTest` (5 tests): Guardrails for train/ship, general trivia refusals, and MCP tool dispatch.
   - `FlightServiceImplTest` (2 tests): Search queries, filtering, and flight ID fetching.
   - `BookingServiceImplTest` (1 test): Passenger count derivation and available seat reduction.
+
+### 11. Complete Admin Operations Suite & Role Distinction
+- **Feature**: Full functionality added to the Admin Console (`/admin`):
+  - **`+ New Route / Flight` Modal**: Dynamic form to publish new scheduled flights to PostgreSQL.
+  - **Flight Status Cycling & Deletion**: Live status toggling (`SCHEDULED`, `DELAYED`, `CANCELLED`, `COMPLETED`) via `PATCH /api/admin/flights/{id}/status`.
+  - **Fleet Manager**: Aircraft maintenance status toggling and CSV report export.
+  - **Customer Bookings Table**: Live lookup of all user reservations with PNR filtering.
+  - **Registered Users Directory**: System user inspection and role display.
+  - **Smart Post-Login Routing**: Automatic redirection to `/admin` for Admins and `/` for regular users.
 
 ---
 
