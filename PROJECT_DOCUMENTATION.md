@@ -55,7 +55,12 @@ npm start
 ```
 *The frontend web app will compile and start at `http://localhost:4200/`.*
 
-#### Step 5: Access the Application
+#### Step 5: Run Automated Unit Tests (21 Unit Tests)
+```bash
+mvn test -f backend/pom.xml
+```
+
+#### Step 6: Access the Application
 - **Web Application**: Open [http://localhost:4200](http://localhost:4200) in your browser.
 - **Backend API & Swagger Docs**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **AI Assistant**: Navigate to [http://localhost:4200/assistant](http://localhost:4200/assistant)
@@ -71,11 +76,12 @@ npm start
 
 ### 2. Key Features
 
-1. **User Authentication & Authorization**:
-   - Secure User Registration and Login with JWT authentication.
+1. **User Authentication & Authorization (JWT Security)**:
+   - Secure User Registration and Login with signed **JSON Web Tokens (JWT)** via HMAC-SHA256 (`JwtUtil.java`, `JwtAuthFilter.java`).
    - Password encryption using BCrypt.
    - Validation ensuring only registered database accounts can log in.
    - Role-Based Access Control (`ROLE_USER`, `ROLE_ADMIN`).
+   - Automatic `Authorization: Bearer <token>` attachment on protected API endpoints (`/api/bookings/**`, `/api/payments/**`, `/api/users/**`).
 
 2. **Flight Search & Multi-Filter Engine**:
    - Search flights across major Indian metro hubs (DEL, BOM, BLR, MAA, HYD, CCU, COK, PNQ, AMD, GOI).
@@ -102,6 +108,7 @@ npm start
 6. **Ollama AI Assistant & Model Context Protocol (MCP)**:
    - Local LLM generation via Ollama `llama3.2:1b`.
    - MCP Server exposing 5 live database tools (`search_flights`, `get_baggage_allowance`, `get_cancellation_policy`, `get_airports_list`, `get_passenger_age_rules`).
+   - Dedicated root `mcp/` directory with `mcp-server-config.json`, documentation, and test scripts.
    - Strict domain guardrails refusing non-flight topics and non-flight transport modes (train, ship, bus).
    - Ultra-fast responses with <15ms MCP fast-path caching and multi-threaded inference.
 
@@ -111,7 +118,7 @@ npm start
 
 ```mermaid
 graph TD
-    A[Angular 18 Frontend - Port 4200] -->|HTTP REST & JSON-RPC| B[Spring Boot 3 Backend - Port 8080]
+    A[Angular 18 Frontend - Port 4200] -->|HTTP REST & JWT Bearer| B[Spring Boot 3 Backend - Port 8080]
     B -->|Spring Data JPA & Flyway| C[(PostgreSQL Database - Port 5432)]
     B -->|MCP Tool Execution| C
     B -->|HTTP REST /api/chat| D[Local Ollama Engine - Port 11434]
@@ -131,7 +138,8 @@ graph TD
 | **Database & ORM** | **PostgreSQL**, Spring Data JPA, Hibernate, HikariCP | Relational data persistence and connection pooling |
 | **Database Migrations** | **Flyway 9.22.3** | Automated schema migrations and seed data |
 | **AI Runtime** | **Ollama (`llama3.2:1b`)** | Local, private Large Language Model inference |
-| **AI Tool Protocol** | **Model Context Protocol (MCP)** | Exposes live flight database tools to the AI assistant |
+| **AI Tool Protocol** | **Model Context Protocol (MCP)** | Exposes live flight database tools to AI assistants |
+| **Unit Testing** | **JUnit 5**, **Mockito** | 21 comprehensive unit tests for backend services & security |
 | **Documentation & API** | Springdoc OpenAPI, Swagger UI | Interactive API testing documentation |
 | **Build Tools** | Maven (Backend), Angular CLI & npm (Frontend), Git | Compilation, packaging, and version control |
 
@@ -181,15 +189,14 @@ graph TD
   - Created `ChatbotController.java` (`POST /api/chat`) and `ChatbotServiceImpl.java`.
   - Injected detailed SkyFlow flight system prompt with Indian airport hubs, partner airlines, baggage policies, and cancellation timelines.
 
-### 7. Model Context Protocol (MCP) Server Integration
+### 7. Model Context Protocol (MCP) Server & Dedicated `mcp/` Folder
 - **Feature**: Implemented standard MCP server architecture:
-  - Created `McpTool.java`, `McpFlightToolService.java`, and `McpController.java` (`/api/mcp/tools`, `/api/mcp/call`, `/api/mcp/rpc`).
-  - Registered 5 live database tools:
-    1. `search_flights`: Live database query for active flights by origin and destination.
-    2. `get_baggage_allowance`: Official baggage policies for Economy (15 Kg) and Business (25 Kg).
-    3. `get_cancellation_policy`: Cancellation fees (20%) and refund rules (3–5 days).
-    4. `get_airports_list`: Full list of supported airports.
-    5. `get_passenger_age_rules`: Automated DOB-to-age rules and passenger types.
+  - Created `backend/src/main/java/com/flightbooking/mcp/`: `McpTool.java`, `McpFlightToolService.java`, and `McpController.java` (`/api/mcp/tools`, `/api/mcp/call`, `/api/mcp/rpc`).
+  - Created dedicated top-level **`mcp/`** directory containing:
+    - `mcp-server-config.json`: Standard client configuration schema for Claude Desktop, Cursor, Antigravity.
+    - `README.md`: MCP server documentation.
+    - `test-mcp-client.ps1`: Interactive client test script.
+  - Registered 5 live database tools: `search_flights`, `get_baggage_allowance`, `get_cancellation_policy`, `get_airports_list`, `get_passenger_age_rules`.
 
 ### 8. Strict Refusal Guardrails for Non-Flight Travel (Train / Ship / Bus)
 - **Feature**: Enforced domain restriction against other transportation modes:
@@ -202,7 +209,15 @@ graph TD
 - **Improvements**:
   - Implemented **Direct MCP Fast-Path Dispatch**: Common flight intents resolve and format in **< 15 milliseconds**.
   - Optimized Ollama inference parameters (`num_thread: 8`, `num_predict: 180`, `num_ctx: 1024`, `temperature: 0.2`), reducing LLM generation time from >15s down to **~1–2 seconds**.
-  - Added live typing animations, MCP badges, and test prompt buttons in the UI.
+
+### 10. Comprehensive Unit Testing Suite (21 Tests Passing)
+- **Feature**: Added JUnit 5 + Mockito unit tests across 6 test classes:
+  - `JwtUtilTest` (3 tests): Token generation, signature validation, expiration checking.
+  - `AuthServiceImplTest` (5 tests): Registration, duplicate prevention, credential validation, wrong password / missing email failure.
+  - `McpFlightToolServiceTest` (5 tests): Tool listing, baggage rules, cancellation rules, flight lookups, and non-flight transport detection.
+  - `ChatbotServiceImplTest` (5 tests): Guardrails for train/ship, general trivia refusals, and MCP tool dispatch.
+  - `FlightServiceImplTest` (2 tests): Search queries, filtering, and flight ID fetching.
+  - `BookingServiceImplTest` (1 test): Passenger count derivation and available seat reduction.
 
 ---
 

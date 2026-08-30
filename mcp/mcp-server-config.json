@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "skyflow-flight-tools": {
+      "name": "SkyFlow Flight Assistant MCP Server",
+      "version": "1.0.0",
+      "transport": "http",
+      "url": "http://localhost:8080/api/mcp/rpc",
+      "endpoints": {
+        "toolsList": "http://localhost:8080/api/mcp/tools",
+        "toolsCall": "http://localhost:8080/api/mcp/call",
+        "rpc": "http://localhost:8080/api/mcp/rpc"
+      },
+      "tools": [
+        {
+          "name": "search_flights",
+          "description": "Search active flights between origin and destination IATA codes (e.g. DEL to BOM)"
+        },
+        {
+          "name": "get_baggage_allowance",
+          "description": "Retrieve official cabin & check-in baggage allowances for Economy and Business class"
+        },
+        {
+          "name": "get_cancellation_policy",
+          "description": "Retrieve flight cancellation fees, windows, and refund processing details"
+        },
+        {
+          "name": "get_airports_list",
+          "description": "Retrieve operational airports and metro hub locations supported on SkyFlow"
+        },
+        {
+          "name": "get_passenger_age_rules",
+          "description": "Retrieve Date of Birth age calculation rules and passenger type categories"
+        }
+      ]
+    }
+  }
+}
