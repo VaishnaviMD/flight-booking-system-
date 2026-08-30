@@ -25,19 +25,19 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 
     @Override
     public UserResponse getProfile(String email) {
-        return toResponse(userRepository.findByEmail(email)
+        return toResponse(userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND)));
     }
 
     @Override
     public UserResponse updateProfile(String email, UserResponse request) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new AppException("Current password is incorrect", HttpStatus.BAD_REQUEST);

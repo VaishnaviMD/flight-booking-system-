@@ -15,6 +15,10 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   tokenType: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
   /** Nested profile returned by the backend (matches Spring's UserResponse). */
   user?: UserResponse;
 }

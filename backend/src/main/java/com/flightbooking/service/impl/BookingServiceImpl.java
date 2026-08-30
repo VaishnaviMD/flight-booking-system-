@@ -33,7 +33,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponse createBooking(BookingRequest req, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
+        User user = userRepository.findByEmailIgnoreCase(userEmail.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
 
         Flight flight = flightRepository.findById(req.getFlightId())
@@ -99,7 +99,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingResponse> getMyBookings(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
+        User user = userRepository.findByEmailIgnoreCase(userEmail.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         return bookingRepository.findByUserOrderByBookedAtDesc(user)
                 .stream().map(this::toResponse).collect(Collectors.toList());
@@ -120,7 +120,7 @@ public class BookingServiceImpl implements BookingService {
      * Prevents any authenticated user from reading someone else's booking.
      */
     private Booking getOwnedBooking(Optional<Booking> booking, String userEmail, String notFoundMessage) {
-        User caller = userRepository.findByEmail(userEmail)
+        User caller = userRepository.findByEmailIgnoreCase(userEmail.trim())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         Booking b = booking.orElseThrow(() -> new AppException(notFoundMessage, HttpStatus.NOT_FOUND));
         boolean isOwner = b.getUser().getId().equals(caller.getId());

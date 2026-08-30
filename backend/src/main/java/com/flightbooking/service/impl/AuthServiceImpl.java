@@ -28,15 +28,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException("Email already registered", HttpStatus.CONFLICT);
+        String email = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new AppException("An account with this email already exists. Please log in instead.", HttpStatus.CONFLICT);
         }
         User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
+                .firstName(request.getFirstName() != null ? request.getFirstName().trim() : "")
+                .lastName(request.getLastName() != null ? request.getLastName().trim() : "")
+                .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
+                .phone(request.getPhone() != null ? request.getPhone().trim() : null)
                 .role(Role.USER)
                 .build();
         userRepository.save(user);
@@ -45,18 +46,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AppException("No account found with this email. Only registered users can log in. Please sign up first.", HttpStatus.UNAUTHORIZED));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AppException("Invalid password. Please check your password and try again.", HttpStatus.UNAUTHORIZED);
+        }
+
         return buildAuthResponse(user);
     }
 
     @Override
     public AuthResponse refreshToken(String refreshToken) {
         String email = jwtUtil.extractUsername(refreshToken);
-        User user = userRepository.findByEmail(email)
+        if (email == null) {
+            throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+        }
+        User user = userRepository.findByEmailIgnoreCase(email.trim().toLowerCase())
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (!jwtUtil.isTokenValid(refreshToken, user)) {
             throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);

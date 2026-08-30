@@ -17,8 +17,7 @@ export class AuthService {
   token = signal<string | null>(localStorage.getItem('token'));
 
   register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request)
-      .pipe(tap(res => this.setSession(res)));
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
@@ -41,7 +40,12 @@ export class AuthService {
   /** A session is valid only while its JWT has not expired. */
   isLoggedIn(): boolean {
     const token = this.getToken();
-    return !!token && !this.jwtHelper.isTokenExpired(token);
+    if (!token) return false;
+    try {
+      return !this.jwtHelper.isTokenExpired(token);
+    } catch {
+      return false;
+    }
   }
 
   isAdmin(): boolean {

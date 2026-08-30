@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookingService } from '../../../services/booking.service';
@@ -12,6 +12,7 @@ import { BookingResponse } from '../../../models/booking.model';
 })
 export class MyTripsComponent implements OnInit {
   bookingService = inject(BookingService);
+  cdr = inject(ChangeDetectorRef);
 
   activeTrips: BookingResponse[] = [];
   pastTrips: BookingResponse[] = [];
@@ -21,13 +22,14 @@ export class MyTripsComponent implements OnInit {
   ngOnInit(): void {
     this.bookingService.getMyBookings().subscribe({
       next: (bookings: BookingResponse[]) => {
-        const now = new Date();
-        this.activeTrips = bookings.filter((b: BookingResponse) => new Date(b.flight.departureTime) >= now && b.status === 'CONFIRMED');
-        this.pastTrips = bookings.filter((b: BookingResponse) => new Date(b.flight.departureTime) < now || b.status === 'CANCELLED');
+        this.activeTrips = (bookings || []).filter((b: BookingResponse) => b.status === 'CONFIRMED' || b.status === 'PENDING');
+        this.pastTrips = (bookings || []).filter((b: BookingResponse) => b.status === 'CANCELLED' || b.status === 'COMPLETED');
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }

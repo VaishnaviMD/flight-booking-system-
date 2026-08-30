@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BookingService } from '../../services/booking.service';
 import { ToastService } from '../../services/toast.service';
@@ -12,25 +12,22 @@ import { CancellationDialogComponent } from '../../components/cancellation-dialo
   imports: [CommonModule, CancellationDialogComponent],
   template: `
     <div class="container bookings-page">
-      <!-- Upcoming Bookings Header -->
+      <!-- Active Bookings Header -->
       <div class="page-title-box">
-        <h2>Upcoming bookings</h2>
-        <span class="active-count">{{ bookings.length }} active booking(s)</span>
+        <h2>My Flight Bookings</h2>
+        <span class="active-count">{{ activeBookings.length }} active booking(s)</span>
       </div>
 
       <div *ngIf="loading" class="loading">Loading your itineraries...</div>
 
-      <!-- Upcoming Bookings Cards -->
+      <!-- Active / Confirmed Bookings Cards -->
       <div class="bookings-stack" *ngIf="!loading">
-        <div *ngFor="let b of upcomingBookings" class="card booking-card-v5">
+        <div *ngFor="let b of activeBookings" class="card booking-card-v5">
           <div class="card-left-border" [class.cancelled-border]="b.status === 'CANCELLED'"></div>
 
           <div class="card-inner">
             <div class="top-row">
-              <span class="badge" [ngClass]="{
-                'badge-operational': b.status === 'CONFIRMED',
-                'badge-danger': b.status === 'CANCELLED'
-              }">
+              <span class="badge badge-operational">
                 {{ b.status }}
               </span>
               <span class="badge badge-on-time" *ngIf="b.flight.refundable !== false">REFUNDABLE</span>
@@ -39,7 +36,7 @@ import { CancellationDialogComponent } from '../../components/cancellation-dialo
 
             <div class="main-info">
               <div class="dest-info">
-                <h3>{{ b.flight.destinationAirport.city }}</h3>
+                <h3>{{ b.flight.destinationAirport.city }} ({{ b.flight.destinationAirport.code }})</h3>
                 <span class="dates-range">{{ b.flight.departureTime | date:'EEE, MMM d, y' }} · {{ b.flight.flightNumber }}</span>
               </div>
 
@@ -49,15 +46,15 @@ import { CancellationDialogComponent } from '../../components/cancellation-dialo
                   <strong>{{ b.flight.airline.name }}</strong>
                 </div>
                 <div>
-                  <span class="lbl">CONFIRMATION</span>
+                  <span class="lbl">PNR / CONFIRMATION</span>
                   <strong class="pnr-highlight">{{ b.pnr }}</strong>
                 </div>
                 <div>
                   <span class="lbl">PASSENGERS</span>
-                  <strong>{{ b.passengers.length }}</strong>
+                  <strong>{{ b.passengers.length }} traveller(s)</strong>
                 </div>
                 <div>
-                  <span class="lbl">FARE</span>
+                  <span class="lbl">TOTAL FARE</span>
                   <strong class="fare-amount">₹{{ b.totalPrice }}</strong>
                 </div>
               </div>
@@ -75,44 +72,43 @@ import { CancellationDialogComponent } from '../../components/cancellation-dialo
               </div>
 
               <div class="card-actions">
-                <button (click)="openItinerary(b)" class="btn btn-outline btn-sm">View Itinerary</button>
+                <button (click)="openItinerary(b)" class="btn btn-outline btn-sm">
+                  <span class="material-icons">receipt_long</span> View Itinerary
+                </button>
                 <button *ngIf="b.status === 'CONFIRMED'" (click)="openCancelDialog(b)" class="btn btn-danger btn-sm">
                   Cancel Booking
-                </button>
-                <button *ngIf="b.status === 'CANCELLED'" disabled class="btn btn-secondary btn-sm">
-                  Cancelled
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div *ngIf="upcomingBookings.length === 0" class="card empty-flights">
+        <div *ngIf="activeBookings.length === 0 && !loading" class="card empty-flights">
           <span class="material-icons">flight_takeoff</span>
-          <h4>No upcoming trips yet.</h4>
-          <p class="empty-sub">Search for a flight and book your next journey.</p>
+          <h4>No active bookings found.</h4>
+          <p class="empty-sub">Search for flights from the Home page and book your next trip.</p>
         </div>
       </div>
 
-      <!-- Cancellations Section (real cancelled bookings) -->
+      <!-- Cancellations Section -->
       <div class="section-block" *ngIf="cancelledBookings.length > 0">
         <span class="sec-tag">CANCELLATION</span>
-        <h3>Cancellation requests</h3>
-        <p class="sec-desc">Refunds are estimates until the carrier confirms the cancellation.</p>
+        <h3>Cancelled Bookings</h3>
+        <p class="sec-desc">Refunds are processed to the original payment method.</p>
 
         <div *ngFor="let b of cancelledBookings" class="card refund-card">
           <div>
             <strong>{{ b.flight.destinationAirport.city }} · PNR {{ b.pnr }}</strong>
-            <span class="refund-sub">{{ b.cancellationReason || 'Cancelled by user' }} · {{ b.cancelledAt | date:'MMM d, y' }}</span>
+            <span class="refund-sub">{{ b.cancellationReason || 'Cancelled by passenger' }} · {{ b.cancelledAt | date:'MMM d, y, HH:mm' }}</span>
           </div>
           <strong class="refund-amt">₹{{ (b.refundAmount ?? b.totalPrice * 0.8) | number:'1.0-0' }} refund</strong>
         </div>
       </div>
 
-      <!-- Past Bookings Section (real completed/past bookings) -->
+      <!-- Past Completed Bookings Section -->
       <div class="section-block" *ngIf="pastBookings.length > 0">
-        <h3>Past bookings</h3>
-        <p class="sec-desc">Completed journeys from your account.</p>
+        <h3>Past Completed Journeys</h3>
+        <p class="sec-desc">Past trips recorded on your account.</p>
 
         <div class="past-stack">
           <div *ngFor="let b of pastBookings" class="card past-card">
@@ -122,13 +118,91 @@ import { CancellationDialogComponent } from '../../components/cancellation-dialo
             </div>
             <div class="past-times">
               <span>{{ b.flight.departureTime | date:'HH:mm' }} {{ b.flight.originAirport.code }}</span>
-              <span class="badge" [ngClass]="b.status === 'COMPLETED' ? 'badge-operational' : 'badge-danger'">{{ b.status }}</span>
+              <span class="badge badge-operational">COMPLETED</span>
               <span>{{ b.flight.arrivalTime | date:'HH:mm' }} {{ b.flight.destinationAirport.code }}</span>
             </div>
             <div class="past-right">
               <strong>₹{{ b.totalPrice }}</strong>
               <button (click)="openItinerary(b)" class="btn btn-outline btn-sm">View Ticket</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Itinerary Details Modal Popup -->
+      <div *ngIf="itineraryOpen && selectedBooking" class="modal-overlay" (click)="itineraryOpen = false">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="header-title">
+              <span class="material-icons itinerary-icon">airplane_ticket</span>
+              <h3>Flight Itinerary · PNR {{ selectedBooking.pnr }}</h3>
+            </div>
+            <button (click)="itineraryOpen = false" class="close-btn">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="itin-route">
+              <div class="pt">
+                <strong>{{ selectedBooking.flight.departureTime | date:'HH:mm' }}</strong>
+                <span>{{ selectedBooking.flight.originAirport.city }} ({{ selectedBooking.flight.originAirport.code }})</span>
+              </div>
+              <div class="line"></div>
+              <div class="pt">
+                <strong>{{ selectedBooking.flight.arrivalTime | date:'HH:mm' }}</strong>
+                <span>{{ selectedBooking.flight.destinationAirport.city }} ({{ selectedBooking.flight.destinationAirport.code }})</span>
+              </div>
+            </div>
+
+            <div class="itin-meta">
+              <div>
+                <span class="lbl">AIRLINE</span>
+                <strong>{{ selectedBooking.flight.airline.name }} ({{ selectedBooking.flight.flightNumber }})</strong>
+              </div>
+              <div>
+                <span class="lbl">CABIN</span>
+                <strong>{{ selectedBooking.cabinClass }}</strong>
+              </div>
+              <div>
+                <span class="lbl">DEPARTURE DATE</span>
+                <strong>{{ selectedBooking.flight.departureTime | date:'mediumDate' }}</strong>
+              </div>
+              <div>
+                <span class="lbl">TOTAL FARE PAID</span>
+                <strong>₹{{ selectedBooking.totalPrice }}</strong>
+              </div>
+            </div>
+
+            <h4 class="itin-sub">Passenger Details</h4>
+            <table class="itin-table">
+              <thead>
+                <tr>
+                  <th>PASSENGER</th>
+                  <th>GENDER / AGE</th>
+                  <th>NATIONALITY</th>
+                  <th>TICKET NO</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of selectedBooking.passengers">
+                  <td><strong>{{ p.firstName }} {{ p.lastName }}</strong></td>
+                  <td>{{ p.gender || '-' }} / {{ p.age != null ? p.age : '-' }}</td>
+                  <td>{{ p.nationality || 'Indian' }}</td>
+                  <td><code>{{ p.ticketNumber || selectedBooking.pnr }}</code></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="itin-contact">
+              <span class="lbl">CONTACT FOR UPDATES</span>
+              <strong>{{ selectedBooking.contactEmail }} · {{ selectedBooking.contactPhone }}</strong>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button (click)="printItinerary()" class="btn btn-outline btn-sm">
+              <span class="material-icons">print</span> Print
+            </button>
+            <button (click)="itineraryOpen = false" class="btn btn-primary btn-sm">Close</button>
           </div>
         </div>
       </div>
@@ -393,6 +467,7 @@ export class MyBookingsComponent implements OnInit {
   private bookingService = inject(BookingService);
   private toast = inject(ToastService);
   private errorDialog = inject(ErrorDialogService);
+  private cdr = inject(ChangeDetectorRef);
 
   bookings: BookingResponse[] = [];
   loading = true;
@@ -406,13 +481,16 @@ export class MyBookingsComponent implements OnInit {
   }
 
   loadBookings() {
+    this.loading = true;
     this.bookingService.getMyBookings().subscribe({
       next: (data) => {
-        this.bookings = data;
+        this.bookings = data || [];
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
+        this.cdr.markForCheck();
         this.errorDialog.show(
           'Could not load bookings',
           err.error?.message || 'Please make sure you are logged in and try again.'
@@ -421,12 +499,9 @@ export class MyBookingsComponent implements OnInit {
     });
   }
 
-  /** Confirmed bookings whose flight is still in the future. */
-  get upcomingBookings(): BookingResponse[] {
-    const now = Date.now();
-    return this.bookings.filter(b =>
-      b.status === 'CONFIRMED' && new Date(b.flight.departureTime).getTime() >= now
-    );
+  /** All active/confirmed bookings associated with this account. */
+  get activeBookings(): BookingResponse[] {
+    return this.bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING');
   }
 
   /** Cancelled bookings shown with their refund estimate. */
@@ -434,18 +509,15 @@ export class MyBookingsComponent implements OnInit {
     return this.bookings.filter(b => b.status === 'CANCELLED');
   }
 
-  /** Completed trips, or confirmed trips whose departure has passed. */
+  /** Completed trips recorded on the account. */
   get pastBookings(): BookingResponse[] {
-    const now = Date.now();
-    return this.bookings.filter(b =>
-      b.status === 'COMPLETED' ||
-      (b.status === 'CONFIRMED' && new Date(b.flight.departureTime).getTime() < now)
-    );
+    return this.bookings.filter(b => b.status === 'COMPLETED');
   }
 
   openItinerary(b: BookingResponse) {
     this.selectedBooking = b;
     this.itineraryOpen = true;
+    this.cdr.markForCheck();
   }
 
   /** Opens the browser print dialog for the currently viewed itinerary. */
@@ -456,6 +528,7 @@ export class MyBookingsComponent implements OnInit {
   openCancelDialog(b: BookingResponse) {
     this.selectedBooking = b;
     this.dialogOpen = true;
+    this.cdr.markForCheck();
   }
 
   executeCancellation() {
@@ -473,6 +546,7 @@ export class MyBookingsComponent implements OnInit {
       },
       error: (err) => {
         this.dialogOpen = false;
+        this.cdr.markForCheck();
         this.errorDialog.show(
           'Cancellation failed',
           err.error?.message || 'Could not cancel this booking. Please try again.'

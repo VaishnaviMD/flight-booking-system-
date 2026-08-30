@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-register',
@@ -14,7 +15,7 @@ import { AuthService } from '../../services/auth.service';
         <h2>Create an Account</h2>
         <p class="subtitle">Join SkyFlow to book and manage your flights.</p>
 
-        <form (ngSubmit)="onSubmit()" #regForm="ngForm">
+        <form (ngSubmit)="onSubmit()">
           <div *ngIf="errorMessage" class="error-banner">
             {{ errorMessage }}
           </div>
@@ -22,31 +23,31 @@ import { AuthService } from '../../services/auth.service';
           <div class="form-row">
             <div class="form-group">
               <label>First Name</label>
-              <input type="text" [(ngModel)]="firstName" name="firstName" required>
+              <input type="text" [(ngModel)]="firstName" name="firstName" placeholder="John">
             </div>
 
             <div class="form-group">
               <label>Last Name</label>
-              <input type="text" [(ngModel)]="lastName" name="lastName" required>
+              <input type="text" [(ngModel)]="lastName" name="lastName" placeholder="Doe">
             </div>
           </div>
 
           <div class="form-group">
             <label>Email Address</label>
-            <input type="email" [(ngModel)]="email" name="email" required email>
+            <input type="email" [(ngModel)]="email" name="email" placeholder="name@example.com">
           </div>
 
           <div class="form-group">
             <label>Phone Number</label>
-            <input type="tel" [(ngModel)]="phone" name="phone">
+            <input type="tel" [(ngModel)]="phone" name="phone" placeholder="9876543210">
           </div>
 
           <div class="form-group">
             <label>Password</label>
-            <input type="password" [(ngModel)]="password" name="password" required minlength="6">
+            <input type="password" [(ngModel)]="password" name="password" placeholder="At least 6 characters">
           </div>
 
-          <button type="submit" [disabled]="regForm.invalid || loading" class="btn btn-primary btn-block">
+          <button type="submit" [disabled]="loading" class="btn btn-primary btn-block">
             {{ loading ? 'Creating Account...' : 'Register' }}
           </button>
         </form>
@@ -91,10 +92,11 @@ import { AuthService } from '../../services/auth.service';
       border-radius: 6px;
       font-size: 0.85rem;
       margin-bottom: 16px;
+      font-weight: 600;
     }
     .footer-link {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 24px;
       font-size: 0.9rem;
 
       a {
@@ -108,6 +110,8 @@ export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   firstName = '';
   lastName = '';
@@ -119,22 +123,74 @@ export class RegisterComponent {
   returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
 
   onSubmit() {
-    this.loading = true;
     this.errorMessage = '';
 
+    if (!this.firstName || !this.firstName.trim()) {
+      this.errorMessage = 'Please enter your first name.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.lastName || !this.lastName.trim()) {
+      this.errorMessage = 'Please enter your last name.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.email || !this.email.trim()) {
+      this.errorMessage = 'Please enter your email address.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.email.trim())) {
+      this.errorMessage = 'Please enter a valid email address (e.g. name@example.com).';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.phone && this.phone.trim() && !/^\+?[0-9\s\-()]{7,15}$/.test(this.phone.trim())) {
+      this.errorMessage = 'Please enter a valid phone number.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.password || this.password.length < 6) {
+      this.errorMessage = 'Password must be at least 6 characters long.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.detectChanges();
+
     this.authService.register({
-      firstName: this.firstName,
-      lastName: this.lastName,
-      email: this.email,
-      phone: this.phone,
+      firstName: this.firstName.trim(),
+      lastName: this.lastName.trim(),
+      email: this.email.trim(),
+      phone: this.phone ? this.phone.trim() : '',
       password: this.password
     }).subscribe({
-      next: () => {
-        this.router.navigateByUrl(this.returnUrl);
+      next: (res) => {
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.toast.success('Registration successful! Please sign in with your email and password.');
+        this.router.navigate(['/login'], {
+          queryParams: { email: this.email.trim(), registered: 'true' }
+        });
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Registration failed.';
         this.loading = false;
+        this.errorMessage = err.error?.message || (err.status === 0 ? 'Cannot reach the backend server. Please make sure port 8080 is running.' : 'Registration failed. Please check the form and try again.');
+        this.toast.error(this.errorMessage);
+        this.cdr.detectChanges();
       }
     });
   }

@@ -25,8 +25,17 @@ public class JwtUtil {
     @Value("${app.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
 
+    private volatile SecretKey cachedKey;
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        if (cachedKey == null) {
+            synchronized (this) {
+                if (cachedKey == null) {
+                    cachedKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+                }
+            }
+        }
+        return cachedKey;
     }
 
     public String generateToken(UserDetails userDetails) {

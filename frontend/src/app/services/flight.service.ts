@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Airline, Airport, Flight, FlightSearchRequest } from '../models/flight.model';
 
@@ -53,6 +53,9 @@ export class FlightService {
   private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
+  private airportsCache$?: Observable<Airport[]>;
+  private airlinesCache$?: Observable<Airline[]>;
+
   searchFlights(request: FlightSearchRequest): Observable<Flight[]> {
     let params = new HttpParams();
     if (request.originCode) params = params.set('origin', request.originCode);
@@ -77,10 +80,20 @@ export class FlightService {
   }
 
   getAirports(): Observable<Airport[]> {
-    return this.http.get<Airport[]>(`${this.apiUrl}/airports`);
+    if (!this.airportsCache$) {
+      this.airportsCache$ = this.http.get<Airport[]>(`${this.apiUrl}/airports`).pipe(
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.airportsCache$;
   }
 
   getAirlines(): Observable<Airline[]> {
-    return this.http.get<Airline[]>(`${this.apiUrl}/airlines`);
+    if (!this.airlinesCache$) {
+      this.airlinesCache$ = this.http.get<Airline[]>(`${this.apiUrl}/airlines`).pipe(
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+    return this.airlinesCache$;
   }
 }

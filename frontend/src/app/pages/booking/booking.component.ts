@@ -50,7 +50,7 @@ import { PassengerRequest } from '../../models/booking.model';
             <p class="section-sub">Please enter details exactly as they appear on your travel documents.</p>
 
             <div *ngFor="let p of passengers; let i = index" class="passenger-block">
-              <span class="passenger-title">ADULT {{ i + 1 }} (Primary Contact)</span>
+              <span class="passenger-title">PASSENGER {{ i + 1 }} {{ i === 0 ? '(Primary Traveller)' : '' }}</span>
 
               <div class="form-row grid-3">
                 <div class="form-group">
@@ -58,6 +58,7 @@ import { PassengerRequest } from '../../models/booking.model';
                   <select [(ngModel)]="p.title" name="title-{{i}}">
                     <option value="Mr.">Mr.</option>
                     <option value="Ms.">Ms.</option>
+                    <option value="Mrs.">Mrs.</option>
                     <option value="Dr.">Dr.</option>
                   </select>
                 </div>
@@ -71,22 +72,26 @@ import { PassengerRequest } from '../../models/booking.model';
                 </div>
               </div>
 
-              <div class="form-row grid-2">
+              <div class="form-row grid-3">
                 <div class="form-group">
                   <label>Date of Birth</label>
-                  <input type="date" [(ngModel)]="p.dateOfBirth" name="dob-{{i}}">
+                  <input type="date" [(ngModel)]="p.dateOfBirth" (ngModelChange)="onDobChange(p)" name="dob-{{i}}" [max]="today">
+                </div>
+                <div class="form-group">
+                  <label>Age <small class="auto-calc-label">(Auto-calculated)</small></label>
+                  <input type="number" [(ngModel)]="p.age" name="age-{{i}}" placeholder="Auto from DOB" readonly class="readonly-input">
                 </div>
                 <div class="form-group">
                   <label>Passenger Type</label>
                   <select [(ngModel)]="p.type" name="type-{{i}}">
-                    <option value="ADULT">Adult</option>
-                    <option value="CHILD">Child</option>
-                    <option value="INFANT">Infant</option>
+                    <option value="ADULT">Adult (12+ yrs)</option>
+                    <option value="CHILD">Child (2-11 yrs)</option>
+                    <option value="INFANT">Infant (Under 2 yrs)</option>
                   </select>
                 </div>
               </div>
 
-              <div class="form-row grid-2">
+              <div class="form-row grid-3">
                 <div class="form-group">
                   <label>Gender</label>
                   <select [(ngModel)]="p.gender" name="gender-{{i}}">
@@ -96,8 +101,14 @@ import { PassengerRequest } from '../../models/booking.model';
                   </select>
                 </div>
                 <div class="form-group">
+                  <label>Nationality</label>
+                  <select [(ngModel)]="p.nationality" name="nationality-{{i}}">
+                    <option *ngFor="let nat of nationalities" [value]="nat">{{ nat }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
                   <label>Passport Number</label>
-                  <input type="text" [(ngModel)]="p.passportNumber" name="passport-{{i}}" placeholder="Passport Number">
+                  <input type="text" [(ngModel)]="p.passportNumber" name="passport-{{i}}" placeholder="Passport (optional)">
                 </div>
               </div>
 
@@ -112,17 +123,6 @@ import { PassengerRequest } from '../../models/booking.model';
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Age</label>
-                  <input type="number" [(ngModel)]="p.age" name="age-{{i}}" min="0" placeholder="Age">
-                </div>
-              </div>
-
-              <div class="form-row grid-2">
-                <div class="form-group">
-                  <label>Nationality</label>
-                  <input type="text" [(ngModel)]="p.nationality" name="nationality-{{i}}" placeholder="Nationality">
-                </div>
-                <div class="form-group">
                   <label>Meal Preference</label>
                   <select [(ngModel)]="p.mealPreference" name="mealPref-{{i}}">
                     <option value="">No preference</option>
@@ -133,25 +133,18 @@ import { PassengerRequest } from '../../models/booking.model';
                 </div>
               </div>
 
-              <div class="form-row grid-2">
+              <div class="form-row grid-3">
                 <div class="form-group">
                   <label>Special Assistance</label>
                   <input type="text" [(ngModel)]="p.specialAssistance" name="assist-{{i}}" placeholder="e.g. Wheelchair (optional)">
                 </div>
                 <div class="form-group">
-                  <label>Date of Birth</label>
-                  <input type="date" [(ngModel)]="p.dateOfBirth" name="dob2-{{i}}" [max]="today">
-                </div>
-              </div>
-
-              <div class="form-row grid-2">
-                <div class="form-group">
                   <label>Emergency Contact Name</label>
-                  <input type="text" [(ngModel)]="p.emergencyContactName" name="emName-{{i}}" placeholder="Emergency contact (optional)">
+                  <input type="text" [(ngModel)]="p.emergencyContactName" name="emName-{{i}}" placeholder="Contact name (optional)">
                 </div>
                 <div class="form-group">
                   <label>Emergency Contact Phone</label>
-                  <input type="tel" [(ngModel)]="p.emergencyContactPhone" name="emPhone-{{i}}" placeholder="Emergency phone (optional)">
+                  <input type="tel" [(ngModel)]="p.emergencyContactPhone" name="emPhone-{{i}}" placeholder="Contact phone (optional)">
                 </div>
               </div>
 
@@ -484,6 +477,17 @@ import { PassengerRequest } from '../../models/booking.model';
       }
     }
     .discount-val { color: var(--accent-color); }
+    .readonly-input {
+      background: #182547 !important;
+      color: var(--accent-color) !important;
+      font-weight: 700;
+      cursor: default;
+    }
+    .auto-calc-label {
+      font-size: 0.7rem;
+      color: var(--accent-color);
+      font-weight: 600;
+    }
     .total-green { color: var(--accent-color); font-weight: 800; }
     .pay-confirm-btn {
       width: 100%;
@@ -522,7 +526,61 @@ export class BookingComponent implements OnInit {
   discountAmount = 0;
   couponMsg = '';
 
+  nationalities: string[] = [
+    'Indian',
+    'American',
+    'British',
+    'Canadian',
+    'Australian',
+    'Emirati',
+    'Singaporean',
+    'German',
+    'French',
+    'Japanese',
+    'Chinese',
+    'Malaysian',
+    'Thai',
+    'Saudi Arabian',
+    'Qatari',
+    'Omani',
+    'Kuwaiti',
+    'South African',
+    'New Zealander',
+    'Italian',
+    'Spanish',
+    'Dutch',
+    'Swiss',
+    'Russian',
+    'Brazilian',
+    'Mexican',
+    'Other'
+  ];
+
   passengers: PassengerRequest[] = [this.emptyPassenger()];
+
+  onDobChange(p: PassengerRequest) {
+    if (!p.dateOfBirth) {
+      p.age = undefined;
+      return;
+    }
+    const birthDate = new Date(p.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    p.age = Math.max(0, age);
+
+    if (p.age < 2) {
+      p.type = 'INFANT';
+    } else if (p.age < 12) {
+      p.type = 'CHILD';
+    } else {
+      p.type = 'ADULT';
+    }
+    this.changeDetectorRef.markForCheck();
+  }
 
   ngOnInit() {
     const user = this.authService.currentUser();
@@ -571,26 +629,58 @@ export class BookingComponent implements OnInit {
 
   /** Client-side validation mirroring the backend's @Valid rules. */
   validateForm(): string | null {
-    if (!this.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
-      return 'Please enter a valid contact email address.';
+    if (!this.email || !this.email.trim()) {
+      return 'Please enter a contact email address for booking confirmation.';
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim())) {
+      return 'Please enter a valid contact email address (e.g. you@example.com).';
+    }
+    if (!this.phone || !this.phone.trim()) {
+      return 'Please enter a contact phone number for flight updates.';
+    }
+
     for (let i = 0; i < this.passengers.length; i++) {
       const p = this.passengers[i];
-      if (!p.firstName?.trim() || !p.lastName?.trim()) {
-        return `Passenger ${i + 1}: first name and last name are required.`;
+      if (!p.firstName || !p.firstName.trim()) {
+        return `Passenger ${i + 1}: First name is required.`;
+      }
+      if (!p.lastName || !p.lastName.trim()) {
+        return `Passenger ${i + 1}: Last name is required.`;
       }
       if (!p.dateOfBirth) {
-        return `Passenger ${i + 1}: date of birth is required.`;
+        return `Passenger ${i + 1}: Date of birth is required.`;
+      }
+      if (p.dateOfBirth > this.today) {
+        return `Passenger ${i + 1}: Date of birth cannot be in the future.`;
       }
     }
+
+    if (!this.cardNumber || this.cardNumber.trim().length < 12) {
+      return 'Please enter a valid 16-digit card number.';
+    }
+    if (!this.expiry || !this.expiry.trim()) {
+      return 'Please enter the card expiry date (MM/YY).';
+    }
+    if (!this.cvc || this.cvc.trim().length < 3) {
+      return 'Please enter a valid 3-digit CVV/CVC.';
+    }
+    if (!this.cardName || !this.cardName.trim()) {
+      return 'Please enter the cardholder name.';
+    }
+
     return null;
   }
 
   applyCoupon() {
-    if (!this.couponCode.trim() || !this.flight) return;
+    if (!this.couponCode || !this.couponCode.trim()) {
+      this.couponMsg = 'Please enter a coupon promo code.';
+      this.changeDetectorRef.markForCheck();
+      return;
+    }
+    if (!this.flight) return;
     const baseTotal = this.flight.basePrice * this.passengers.length + 399;
 
-    this.couponService.applyCoupon(this.couponCode, baseTotal).subscribe({
+    this.couponService.applyCoupon(this.couponCode.trim(), baseTotal).subscribe({
       next: (res) => {
         this.discountAmount = res.valid ? res.discountAmount : 0;
         this.couponMsg = res.message;
@@ -601,7 +691,7 @@ export class BookingComponent implements OnInit {
       },
       error: (err) => {
         this.discountAmount = 0;
-        this.couponMsg = err.error?.message || 'Could not validate the coupon right now.';
+        this.couponMsg = err.error?.message || 'Invalid coupon code or minimum booking amount not met.';
         this.changeDetectorRef.markForCheck();
       }
     });

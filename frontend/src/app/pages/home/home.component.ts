@@ -159,12 +159,24 @@ export class HomeComponent implements OnInit {
   }
 
   onSearch() {
-    if (!this.originCode || !this.destinationCode || !this.departureDate) {
-      this.toast.warning('Please select origin, destination and departure date.');
+    if (!this.originCode) {
+      this.toast.warning('Please select a departure city (From).');
+      return;
+    }
+    if (!this.destinationCode) {
+      this.toast.warning('Please select an arrival destination (To).');
       return;
     }
     if (this.originCode === this.destinationCode) {
-      this.toast.warning('Origin and destination cannot be the same.');
+      this.toast.warning('Departure and arrival airports cannot be the same. Please choose different cities.');
+      return;
+    }
+    if (!this.departureDate) {
+      this.toast.warning('Please select your departure date.');
+      return;
+    }
+    if (this.departureDate < this.today) {
+      this.toast.warning('Departure date cannot be in the past. Please select today or a future date.');
       return;
     }
     this.router.navigate(['/search'], {

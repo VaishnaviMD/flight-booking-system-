@@ -62,7 +62,7 @@ class BookingServiceImplTest {
                 passenger("Jane", "Doe")
         ));
 
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
         when(flightRepository.findById(10L)).thenReturn(Optional.of(flight));
         when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
             Booking saved = invocation.getArgument(0);

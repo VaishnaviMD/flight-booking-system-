@@ -1,99 +1,99 @@
 <div class="container" style="max-width: 1100px; margin: 32px auto; padding: 0 16px;">
   <div style="margin-bottom: 24px;">
-    <h1 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main, #0f172a);">My Trips & Itineraries</h1>
-    <p style="margin: 4px 0 0; color: var(--text-muted, #64748b);">View live flight status, gate details, and boarding pass cards for your journeys.</p>
+    <h1 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main);">My Trips & Itineraries</h1>
+    <p style="margin: 4px 0 0; color: var(--text-muted);">View live flight status, gate details, and boarding pass cards for your journeys.</p>
   </div>
 
   <!-- Tabs Navigation -->
-  <div style="display: flex; gap: 12px; border-bottom: 2px solid var(--border-color, #e2e8f0); margin-bottom: 24px;">
+  <div style="display: flex; gap: 12px; border-bottom: 2px solid var(--border-color); margin-bottom: 24px;">
     <button 
       (click)="selectedTab = 'UPCOMING'"
-      [style.border-bottom]="selectedTab === 'UPCOMING' ? '3px solid #2563eb' : 'none'"
-      [style.color]="selectedTab === 'UPCOMING' ? '#2563eb' : 'var(--text-muted, #64748b)'"
+      [style.border-bottom]="selectedTab === 'UPCOMING' ? '3px solid var(--accent-color)' : '3px solid transparent'"
+      [style.color]="selectedTab === 'UPCOMING' ? 'var(--accent-color)' : 'var(--text-muted)'"
       style="background: transparent; border: none; padding: 12px 20px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
       <span class="material-icons">flight_takeoff</span> Upcoming Trips ({{ activeTrips.length }})
     </button>
 
     <button 
       (click)="selectedTab = 'PAST'"
-      [style.border-bottom]="selectedTab === 'PAST' ? '3px solid #2563eb' : 'none'"
-      [style.color]="selectedTab === 'PAST' ? '#2563eb' : 'var(--text-muted, #64748b)'"
+      [style.border-bottom]="selectedTab === 'PAST' ? '3px solid var(--accent-color)' : '3px solid transparent'"
+      [style.color]="selectedTab === 'PAST' ? 'var(--accent-color)' : 'var(--text-muted)'"
       style="background: transparent; border: none; padding: 12px 20px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
       <span class="material-icons">history</span> Past & Cancelled ({{ pastTrips.length }})
     </button>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" style="text-align: center; padding: 60px 0; color: var(--text-muted, #64748b);">
+  <div *ngIf="loading" style="text-align: center; padding: 60px 0; color: var(--text-muted);">
     <span class="material-icons" style="font-size: 40px; animation: spin 1s linear infinite;">sync</span>
     <p>Retrieving trip details...</p>
   </div>
 
   <!-- Content for Upcoming Trips -->
   <div *ngIf="!loading && selectedTab === 'UPCOMING'">
-    <div *ngIf="activeTrips.length === 0" style="text-align: center; padding: 60px 20px; background: var(--card-bg, #fff); border-radius: 16px; border: 1px dashed var(--border-color, #e2e8f0);">
-      <span class="material-icons" style="font-size: 56px; color: var(--text-muted, #94a3b8); margin-bottom: 12px;">luggage</span>
-      <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-main, #1e293b);">No upcoming trips planned</h3>
-      <p style="color: var(--text-muted, #64748b); margin: 6px 0 20px;">Ready for your next adventure? Find top flight deals now.</p>
-      <a routerLink="/search" style="display: inline-flex; align-items: center; gap: 8px; background: #2563eb; color: #fff; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none;">
+    <div *ngIf="activeTrips.length === 0" class="card" style="text-align: center; padding: 60px 20px; border-radius: 16px; border: 1px dashed var(--border-color);">
+      <span class="material-icons" style="font-size: 56px; color: var(--text-dim); margin-bottom: 12px;">luggage</span>
+      <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-main);">No upcoming trips planned</h3>
+      <p style="color: var(--text-muted); margin: 6px 0 20px;">Ready for your next adventure? Find top flight deals now.</p>
+      <a routerLink="/search" class="btn btn-primary" style="display: inline-flex;">
         Book a Flight
       </a>
     </div>
 
-    <div *ngFor="let t of activeTrips" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-radius: 20px; padding: 28px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(15,23,42,0.15);">
+    <div *ngFor="let t of activeTrips" class="card" style="background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="material-icons" style="color: #60a5fa; font-size: 32px;">flight_takeoff</span>
+          <span class="material-icons" style="color: var(--accent-color); font-size: 32px;">flight_takeoff</span>
           <div>
-            <div style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">AIRLINE & FLIGHT</div>
-            <div style="font-size: 1.2rem; font-weight: 800; color: #f8fafc;">{{ t.flight.airline?.name }} • {{ t.flight.flightNumber }}</div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700;">AIRLINE & FLIGHT</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-main);">{{ t.flight.airline?.name }} • {{ t.flight.flightNumber }}</div>
           </div>
         </div>
-        <div style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
-          ON SCHEDULE
+        <div class="badge badge-operational">
+          CONFIRMED
         </div>
       </div>
 
       <!-- Route Banner -->
-      <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 14px; margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; background: var(--surface-card); padding: 20px; border-radius: 14px; margin-bottom: 20px; border: 1px solid var(--border-color);">
         <div>
-          <div style="font-size: 2.2rem; font-weight: 900; color: #60a5fa;">{{ t.flight.originAirport?.code }}</div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: #e2e8f0;">{{ t.flight.originAirport?.city }}</div>
-          <div style="font-size: 0.8rem; color: #94a3b8;">{{ t.flight.departureTime | date:'shortTime' }}</div>
+          <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-color);">{{ t.flight.originAirport?.code }}</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">{{ t.flight.originAirport?.city }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">{{ t.flight.departureTime | date:'shortTime' }}</div>
         </div>
 
         <div style="text-align: center; min-width: 120px;">
-          <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">DIRECT FLIGHT</div>
-          <div style="height: 2px; background: #3b82f6; margin: 8px 0; position: relative;">
-            <span class="material-icons" style="position: absolute; top: -10px; left: 42%; font-size: 20px; color: #60a5fa;">flight</span>
+          <div style="font-size: 0.75rem; color: var(--text-dim); font-weight: 600;">DIRECT FLIGHT</div>
+          <div style="height: 2px; background: var(--border-color); margin: 8px 0; position: relative;">
+            <span class="material-icons" style="position: absolute; top: -10px; left: 42%; font-size: 20px; color: var(--accent-color);">flight</span>
           </div>
-          <div style="font-size: 0.8rem; color: #cbd5e1;">PNR: {{ t.pnr }}</div>
+          <div style="font-size: 0.8rem; color: var(--accent-color); font-weight: 700;">PNR: {{ t.pnr }}</div>
         </div>
 
         <div style="text-align: right;">
-          <div style="font-size: 2.2rem; font-weight: 900; color: #60a5fa;">{{ t.flight.destinationAirport?.code }}</div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: #e2e8f0;">{{ t.flight.destinationAirport?.city }}</div>
-          <div style="font-size: 0.8rem; color: #94a3b8;">{{ t.flight.arrivalTime | date:'shortTime' }}</div>
+          <div style="font-size: 2.2rem; font-weight: 900; color: var(--accent-color);">{{ t.flight.destinationAirport?.code }}</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">{{ t.flight.destinationAirport?.city }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">{{ t.flight.arrivalTime | date:'shortTime' }}</div>
         </div>
       </div>
 
       <!-- Boarding Info Grid -->
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 0.9rem;">
-        <div style="background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">DATE</div>
-          <div style="font-weight: 700;">{{ t.flight.departureTime | date:'mediumDate' }}</div>
+        <div style="background: var(--surface-card); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">DATE</div>
+          <div style="font-weight: 700; color: var(--text-main);">{{ t.flight.departureTime | date:'mediumDate' }}</div>
         </div>
-        <div style="background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">GATE</div>
-          <div style="font-weight: 700; color: #fbbf24;">B12</div>
+        <div style="background: var(--surface-card); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">PASSENGERS</div>
+          <div style="font-weight: 700; color: var(--accent-color);">{{ t.passengers.length }} Traveller(s)</div>
         </div>
-        <div style="background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">BOARDING</div>
-          <div style="font-weight: 700;">45 MIN BEFORE</div>
+        <div style="background: var(--surface-card); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">TOTAL FARE</div>
+          <div style="font-weight: 700; color: var(--accent-color);">₹{{ t.totalPrice }}</div>
         </div>
-        <div style="background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px;">
-          <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">CABIN</div>
-          <div style="font-weight: 700;">{{ t.cabinClass }}</div>
+        <div style="background: var(--surface-card); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">CABIN</div>
+          <div style="font-weight: 700; color: var(--text-main);">{{ t.cabinClass }}</div>
         </div>
       </div>
     </div>
@@ -101,25 +101,25 @@
 
   <!-- Content for Past Trips -->
   <div *ngIf="!loading && selectedTab === 'PAST'">
-    <div *ngIf="pastTrips.length === 0" style="text-align: center; padding: 60px 20px; background: var(--card-bg, #fff); border-radius: 16px; border: 1px dashed var(--border-color, #e2e8f0);">
-      <p style="color: var(--text-muted, #64748b);">No past trip records available.</p>
+    <div *ngIf="pastTrips.length === 0" class="card" style="text-align: center; padding: 60px 20px; border-radius: 16px; border: 1px dashed var(--border-color);">
+      <p style="color: var(--text-muted);">No past or cancelled trip records available.</p>
     </div>
 
-    <div *ngFor="let t of pastTrips" style="background: var(--card-bg, #fff); border-radius: 16px; border: 1px solid var(--border-color, #e2e8f0); padding: 20px; margin-bottom: 16px;">
+    <div *ngFor="let t of pastTrips" class="card" style="background: var(--surface-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 20px; margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-main, #0f172a);">
+          <span style="font-weight: 800; font-size: 1.15rem; color: var(--text-main);">
             {{ t.flight.originAirport?.code }} ➔ {{ t.flight.destinationAirport?.code }}
           </span>
-          <div style="font-size: 0.85rem; color: var(--text-muted, #64748b); margin-top: 4px;">
-            {{ t.flight.airline?.name }} ({{ t.flight.flightNumber }}) • {{ t.flight.departureTime | date:'mediumDate' }}
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+            {{ t.flight.airline?.name }} ({{ t.flight.flightNumber }}) • PNR: <strong style="color: var(--accent-color);">{{ t.pnr }}</strong> • {{ t.flight.departureTime | date:'mediumDate' }}
           </div>
         </div>
 
         <span 
-          [style.color]="t.status === 'CONFIRMED' ? '#16a34a' : '#ef4444'"
-          style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
-          {{ t.status === 'CONFIRMED' ? 'COMPLETED' : 'CANCELLED' }}
+          class="badge"
+          [ngClass]="t.status === 'CANCELLED' ? 'badge-danger' : 'badge-operational'">
+          {{ t.status === 'CANCELLED' ? 'CANCELLED' : 'COMPLETED' }}
         </span>
       </div>
     </div>

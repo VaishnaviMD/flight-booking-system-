@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FlightService } from '../../services/flight.service';
+import { ToastService } from '../../services/toast.service';
 import { ErrorDialogService } from '../../services/error-dialog.service';
 import { SkeletonComponent } from '../../components/skeleton/skeleton.component';
 import { Flight, Airport } from '../../models/flight.model';
@@ -378,6 +379,7 @@ export class FlightSearchComponent implements OnInit {
   private router = inject(Router);
   private changeDetectorRef = inject(ChangeDetectorRef);
   private errorDialog = inject(ErrorDialogService);
+  private toast = inject(ToastService);
 
   airports: Airport[] = [];
   flights: Flight[] = [];
@@ -406,7 +408,9 @@ export class FlightSearchComponent implements OnInit {
       if (params['destinationCode']) this.destinationCode = params['destinationCode'];
       if (params['departureDate']) this.departureDate = params['departureDate'];
       if (params['cabinClass']) this.cabinClass = params['cabinClass'];
-      this.executeSearch();
+      if (this.originCode && this.destinationCode && this.departureDate) {
+        this.executeSearch();
+      }
     });
   }
 
@@ -423,12 +427,27 @@ export class FlightSearchComponent implements OnInit {
   }
 
   executeSearch() {
-    if (!this.canSearch()) {
-      this.flights = [];
-      this.searched = false;
-      this.changeDetectorRef.markForCheck();
+    if (!this.originCode) {
+      this.toast.warning('Please select a departure airport (From).');
       return;
     }
+    if (!this.destinationCode) {
+      this.toast.warning('Please select an arrival airport (To).');
+      return;
+    }
+    if (this.originCode === this.destinationCode) {
+      this.toast.warning('Departure and arrival cannot be the same airport.');
+      return;
+    }
+    if (!this.departureDate) {
+      this.toast.warning('Please select a departure date.');
+      return;
+    }
+    if (this.departureDate < this.minDate) {
+      this.toast.warning('Departure date cannot be in the past.');
+      return;
+    }
+
     this.loading = true;
     this.searched = true;
 

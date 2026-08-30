@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -14,31 +15,29 @@ import { AuthService } from '../../services/auth.service';
         <h2>Welcome Back</h2>
         <p class="subtitle">Log in to manage your flight bookings.</p>
 
-        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <form (ngSubmit)="onSubmit()">
+          <div *ngIf="successMessage" class="success-banner">
+            {{ successMessage }}
+          </div>
+
           <div *ngIf="errorMessage" class="error-banner">
             {{ errorMessage }}
           </div>
 
           <div class="form-group">
             <label>Email Address</label>
-            <input type="email" [(ngModel)]="email" name="email" required email #emailCtrl="ngModel">
+            <input type="email" [(ngModel)]="email" name="email" placeholder="name@example.com">
           </div>
 
           <div class="form-group">
             <label>Password</label>
-            <input type="password" [(ngModel)]="password" name="password" required>
+            <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••">
           </div>
 
-          <button type="submit" [disabled]="loginForm.invalid || loading" class="btn btn-primary btn-block">
+          <button type="submit" [disabled]="loading" class="btn btn-primary btn-block">
             {{ loading ? 'Logging in...' : 'Sign In' }}
           </button>
         </form>
-
-        <div class="quick-credentials">
-          <p><strong>Demo Accounts (Pre-loaded):</strong></p>
-          <p>User: <code>priya&#64;example.com</code> / <code>Admin&#64;123</code></p>
-          <p>Admin: <code>admin&#64;skyflow.com</code> / <code>Admin&#64;123</code></p>
-        </div>
 
         <p class="footer-link">
           Don't have an account?
@@ -68,6 +67,16 @@ import { AuthService } from '../../services/auth.service';
       width: 100%;
       margin-top: 12px;
     }
+    .success-banner {
+      background: rgba(0, 220, 130, 0.15);
+      border: 1px solid var(--accent-color);
+      color: var(--accent-color);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
     .error-banner {
       background: #fee2e2;
       color: #991b1b;
@@ -75,18 +84,11 @@ import { AuthService } from '../../services/auth.service';
       border-radius: 6px;
       font-size: 0.85rem;
       margin-bottom: 16px;
-    }
-    .quick-credentials {
-      background: #f1f5f9;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 20px;
-      font-size: 0.85rem;
-      color: var(--text-dark);
+      font-weight: 600;
     }
     .footer-link {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 24px;
       font-size: 0.9rem;
 
       a {
@@ -96,28 +98,76 @@ import { AuthService } from '../../services/auth.service';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   email = '';
   password = '';
   loading = false;
   errorMessage = '';
-  returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+  successMessage = '';
+  returnUrl = '/';
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['returnUrl'] && params['returnUrl'] !== '/login' && params['returnUrl'] !== '/register') {
+        this.returnUrl = params['returnUrl'];
+      }
+      if (params['email']) {
+        this.email = params['email'];
+      }
+      if (params['registered'] === 'true') {
+        this.successMessage = 'Registration successful! Please enter your password to sign in.';
+      }
+      this.cdr.detectChanges();
+    });
+  }
 
   onSubmit() {
-    this.loading = true;
     this.errorMessage = '';
 
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
-        this.router.navigateByUrl(this.returnUrl);
+    if (!this.email || !this.email.trim()) {
+      this.errorMessage = 'Please enter your email address.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.email.trim())) {
+      this.errorMessage = 'Please enter a valid email address (e.g. name@example.com).';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.password || !this.password.trim()) {
+      this.errorMessage = 'Please enter your password.';
+      this.toast.warning(this.errorMessage);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.detectChanges();
+
+    this.authService.login({ email: this.email.trim(), password: this.password }).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.toast.success(`Welcome back, ${res.firstName || 'Traveller'}!`);
+        const target = (this.returnUrl && this.returnUrl !== '/login' && this.returnUrl !== '/register' && this.returnUrl !== '') ? this.returnUrl : '/';
+        this.router.navigate([target]);
       },
       error: (err) => {
-        this.errorMessage = err.error?.message || 'Invalid email or password.';
         this.loading = false;
+        this.errorMessage = err.error?.message || (err.status === 0 ? 'Cannot reach the backend server. Please make sure port 8080 is running.' : 'Invalid email or password. Please check your credentials.');
+        this.toast.error(this.errorMessage);
+        this.cdr.detectChanges();
       }
     });
   }
