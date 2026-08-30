@@ -23,10 +23,11 @@ dist/
 .angular/
 *.js.map
 
-# ── Environment / Secrets ─────────────────────────────────
+# ── Environment / Secrets / Binaries ──────────────────────
 .env
 *.env
 application-local.properties
+*.exe
 
 # ── OS ────────────────────────────────────────────────────
 .DS_Store

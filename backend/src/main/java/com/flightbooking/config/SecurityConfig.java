@@ -42,7 +42,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/flights/search", "/api/airports", "/api/airlines").permitAll()
-                .requestMatchers("/api/chat/**", "/api/mcp/**").permitAll()
+                .requestMatchers("/api/chat/**", "/api/mcp/**", "/api/chatgpt/**", "/.well-known/**").permitAll()
                 // Flight details are public (browsing is possible pre-login; booking stays protected)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/flights/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()

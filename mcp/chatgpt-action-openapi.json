@@ -1,0 +1,98 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SkyFlow Flight Booking Assistant API",
+    "description": "Live flight search, baggage policies, cancellation rules, and airport information API for ChatGPT Custom Actions and Plugins.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://YOUR-NGROK-OR-PUBLIC-DOMAIN.ngrok-free.app",
+      "description": "Public HTTPS server (use ngrok or deployed server for ChatGPT)"
+    }
+  ],
+  "paths": {
+    "/api/chatgpt/flights/search": {
+      "get": {
+        "operationId": "searchFlights",
+        "summary": "Search available scheduled flights between origin and destination airports",
+        "description": "Fetches real-time flight schedules, airlines, ticket prices (INR), and seat availability between any two airport IATA codes.",
+        "parameters": [
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "DEL"
+            },
+            "description": "3-letter IATA origin airport code (e.g. DEL, BOM, BLR, MAA, HYD, CCU, GOI)"
+          },
+          {
+            "name": "destination",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "BOM"
+            },
+            "description": "3-letter IATA destination airport code (e.g. BOM, DEL, BLR, MAA, HYD, CCU, GOI)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of matching flights with prices and available seats"
+          }
+        }
+      }
+    },
+    "/api/chatgpt/policy/baggage": {
+      "get": {
+        "operationId": "getBaggagePolicy",
+        "summary": "Get official check-in and cabin baggage allowances for Economy and Business class",
+        "description": "Returns official baggage weight limits (15 Kg Economy Check-in, 7 Kg Cabin; 25 Kg Business Check-in, 7 Kg Cabin).",
+        "responses": {
+          "200": {
+            "description": "Baggage weight limits for cabin and check-in luggage"
+          }
+        }
+      }
+    },
+    "/api/chatgpt/policy/cancellation": {
+      "get": {
+        "operationId": "getCancellationPolicy",
+        "summary": "Get flight cancellation fees, windows, and refund processing timelines",
+        "description": "Returns full cancellation policies: 100% full refund up to 24 hours before flight; 20% cancellation fee within 24 hours; refund within 3-5 business days.",
+        "responses": {
+          "200": {
+            "description": "Cancellation terms, fees, and refund processing duration"
+          }
+        }
+      }
+    },
+    "/api/chatgpt/airports": {
+      "get": {
+        "operationId": "getAirportsList",
+        "summary": "Get all operational metro airports and hub locations supported in SkyFlow",
+        "description": "Returns a list of all supported Indian airports with city names and IATA codes (DEL, BOM, BLR, MAA, HYD, CCU, COK, PNQ, AMD, GOI).",
+        "responses": {
+          "200": {
+            "description": "List of supported Indian airport hubs and IATA codes"
+          }
+        }
+      }
+    },
+    "/api/chatgpt/rules/passenger": {
+      "get": {
+        "operationId": "getPassengerRules",
+        "summary": "Get rules for automated age calculation from Date of Birth and passenger types",
+        "description": "Returns passenger age calculation rules (Infant <2 yrs, Child 2-11 yrs, Adult 12+ yrs).",
+        "responses": {
+          "200": {
+            "description": "Passenger age categories and rules"
+          }
+        }
+      }
+    }
+  }
+}

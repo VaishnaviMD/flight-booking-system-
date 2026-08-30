@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SkyFlow Flight Assistant",
+  "name_for_model": "skyflow_flight_assistant",
+  "description_for_human": "Search live flights, check baggage policies, cancellation rules, and airport schedules on SkyFlow.",
+  "description_for_model": "Plugin and action tool provider for querying live flights, airline schedules, baggage allowances, cancellation fees, and airport codes from SkyFlow Flight Booking System. Note: Only flight and air travel queries are supported.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://YOUR-PUBLIC-URL.ngrok-free.app/api/chatgpt/openapi.json"
+  },
+  "logo_url": "https://raw.githubusercontent.com/VaishnaviMD/flight-booking-system-/master/frontend/src/favicon.ico",
+  "contact_email": "support@skyflow.com",
+  "legal_info_url": "https://skyflow.com/terms"
+}
